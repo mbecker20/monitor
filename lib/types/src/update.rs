@@ -66,9 +66,10 @@ impl Log {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(tag = "type", content = "id")]
 pub enum UpdateTarget {
+    #[default]
     System,
     Build(String),
     Deployment(String),
@@ -76,12 +77,6 @@ pub enum UpdateTarget {
     Procedure(String),
     Group(String),
     Command(String),
-}
-
-impl Default for UpdateTarget {
-    fn default() -> Self {
-        UpdateTarget::System
-    }
 }
 
 impl From<&Build> for UpdateTarget {
@@ -145,17 +140,14 @@ impl From<&Group> for Option<UpdateTarget> {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy)]
+#[derive(
+    Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy, Default,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum UpdateStatus {
     Queued,
     InProgress,
+    #[default]
     Complete,
-}
-
-impl Default for UpdateStatus {
-    fn default() -> Self {
-        UpdateStatus::Complete
-    }
 }

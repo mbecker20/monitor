@@ -17,6 +17,6 @@ pub async fn delete_network(name: &str) -> Log {
 }
 
 pub async fn prune_networks() -> Log {
-    let command = format!("docker network prune -f");
+    let command = String::from("docker network prune -f");
     run_monitor_command("prune networks", command).await
 }

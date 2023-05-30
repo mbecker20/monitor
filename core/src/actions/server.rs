@@ -88,7 +88,7 @@ impl State {
         server_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Server> {
-        if self.server_action_states.busy(server_id).await {
+        if self.action_states.server.busy(server_id).await {
             return Err(anyhow!("server busy"));
         }
         let server = self
@@ -156,7 +156,7 @@ impl State {
         mut new_server: Server,
         user: &RequestUser,
     ) -> anyhow::Result<Server> {
-        if self.server_action_states.busy(&new_server.id).await {
+        if self.action_states.server.busy(&new_server.id).await {
             return Err(anyhow!("server busy"));
         }
         let current_server = self
@@ -200,10 +200,11 @@ impl State {
         server_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.server_action_states.busy(server_id).await {
+        if self.action_states.server.busy(server_id).await {
             return Err(anyhow!("server busy"));
         }
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_networks = true;
             })
@@ -211,7 +212,8 @@ impl State {
 
         let res = self.prune_networks_inner(server_id, user).await;
 
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_networks = false;
             })
@@ -263,10 +265,11 @@ impl State {
         server_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.server_action_states.busy(server_id).await {
+        if self.action_states.server.busy(server_id).await {
             return Err(anyhow!("server busy"));
         }
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_images = true;
             })
@@ -274,7 +277,8 @@ impl State {
 
         let res = self.prune_images_inner(server_id, user).await;
 
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_images = false;
             })
@@ -327,10 +331,11 @@ impl State {
         server_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.server_action_states.busy(server_id).await {
+        if self.action_states.server.busy(server_id).await {
             return Err(anyhow!("server busy"));
         }
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_containers = true;
             })
@@ -338,7 +343,8 @@ impl State {
 
         let res = self.prune_containers_inner(server_id, user).await;
 
-        self.server_action_states
+        self.action_states
+            .server
             .update_entry(server_id.to_string(), |entry| {
                 entry.pruning_containers = false;
             })

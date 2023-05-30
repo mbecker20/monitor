@@ -111,11 +111,6 @@ impl State {
             return;
         }
         if stats.cpu_perc > server.cpu_alert {
-            let region = if let Some(region) = &server.region {
-                format!(" ({region})")
-            } else {
-                String::new()
-            };
             let mut top_procs = stats.processes.clone();
             top_procs.sort_by(|a, b| {
                 if a.cpu_perc > b.cpu_perc {
@@ -139,6 +134,11 @@ impl State {
                 })
                 .collect::<Vec<_>>()
                 .join("");
+            let region = if let Some(region) = &server.region {
+                format!(" ({region})")
+            } else {
+                String::new()
+            };
             let mut blocks = vec![
                 Block::header("WARNING 🚨"),
                 Block::section(format!(

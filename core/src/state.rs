@@ -10,22 +10,24 @@ use types::{
     BuildActionState, CommandActionState, CoreConfig, DeploymentActionState, ServerActionState,
 };
 
-use crate::{helpers::Cache, monitoring::AlertStatus, ws::update::UpdateWsChannel};
+use crate::{
+    cache::CachedDeploymentStatus, helpers::Cache, monitoring::AlertStatus,
+    ws::update::UpdateWsChannel,
+};
 
 pub type StateExtension = Extension<Arc<State>>;
 
-// pub type Cache<T> = RwLock<HashMap<String, T>>;
 pub struct State {
     pub config: CoreConfig,
     pub db: DbClient,
     pub update: UpdateWsChannel,
     pub periphery: PeripheryClient,
     pub slack: Option<slack::Client>,
-    pub build_action_states: Cache<BuildActionState>,
-    pub deployment_action_states: Cache<DeploymentActionState>,
-    pub server_action_states: Cache<ServerActionState>,
-    pub command_action_states: Cache<CommandActionState>,
+
+    // caches
+    pub action_states: ActionStates,
     pub server_alert_status: Cache<AlertStatus>, // (server_id, AlertStatus)
+    pub deployment_status_cache: Cache<Arc<CachedDeploymentStatus>>,
 }
 
 impl State {
@@ -36,17 +38,17 @@ impl State {
             periphery: PeripheryClient::new(config.passkey.clone()),
             config,
             update: UpdateWsChannel::new(),
-            build_action_states: Default::default(),
-            deployment_action_states: Default::default(),
-            server_action_states: Default::default(),
-            command_action_states: Default::default(),
+            action_states: Default::default(),
             server_alert_status: Default::default(),
+            deployment_status_cache: Default::default(),
         };
         let state = Arc::new(state);
         let state_clone = state.clone();
         tokio::spawn(async move { state_clone.collect_server_stats().await });
         let state_clone = state.clone();
         tokio::spawn(async move { state_clone.daily_image_prune().await });
+        let state_clone = state.clone();
+        tokio::spawn(async move { state_clone.manage_status_cache().await });
         if state.slack.is_some() {
             let state_clone = state.clone();
             tokio::spawn(async move { state_clone.daily_update().await });
@@ -84,4 +86,12 @@ impl State {
             join_all(futures).await;
         }
     }
+}
+
+#[derive(Default)]
+pub struct ActionStates {
+    pub build: Cache<BuildActionState>,
+    pub deployment: Cache<DeploymentActionState>,
+    pub server: Cache<ServerActionState>,
+    pub command: Cache<CommandActionState>,
 }

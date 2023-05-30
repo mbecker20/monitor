@@ -9,7 +9,7 @@ pub fn get_socket_addr(port: u16) -> SocketAddr {
 }
 
 pub fn to_monitor_name(name: &str) -> String {
-    name.to_lowercase().replace(" ", "_")
+    name.to_lowercase().replace(' ', "_")
 }
 
 pub fn handle_anyhow_error(err: anyhow::Error) -> (StatusCode, String) {

@@ -9,7 +9,7 @@ use crate::helpers::run_monitor_command;
 use super::{docker_login, parse_extra_args};
 
 pub async fn prune_images() -> Log {
-    let command = format!("docker image prune -a -f");
+    let command = String::from("docker image prune -a -f");
     run_monitor_command("prune images", command).await
 }
 
@@ -51,7 +51,7 @@ pub async fn build(
     let extra_args = parse_extra_args(extra_args);
     let buildx = if *use_buildx { " buildx" } else { "" };
     let image_name = get_image_name(&name, docker_account, docker_organization);
-    let image_tags = image_tags(&image_name, &version);
+    let image_tags = image_tags(&image_name, version);
     let docker_push = if using_account {
         format!(" && docker image push --all-tags {image_name}")
     } else {
@@ -107,13 +107,13 @@ fn image_tags(image_name: &str, version: &Version) -> String {
     )
 }
 
-fn parse_build_args(build_args: &Vec<EnvironmentVar>) -> String {
+fn parse_build_args(build_args: &[EnvironmentVar]) -> String {
     let mut args = build_args
         .iter()
         .map(|p| format!(" --build-arg {}={}", p.variable, p.value))
         .collect::<Vec<String>>()
         .join("");
-    if args.len() > 0 {
+    if !args.is_empty() {
         args.push(' ');
     }
     args

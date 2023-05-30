@@ -31,7 +31,7 @@ impl MonitorClient {
     pub async fn create_full_procedure(&self, procedure: &Procedure) -> anyhow::Result<Procedure> {
         self.post::<&Procedure, _>("/api/procedure/create_full", procedure)
             .await
-            .context(format!("failed at creating full procedure"))
+            .context(String::from("failed at creating full procedure"))
     }
 
     pub async fn delete_procedure(&self, id: &str) -> anyhow::Result<Procedure> {

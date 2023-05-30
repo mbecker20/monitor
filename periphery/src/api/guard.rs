@@ -26,7 +26,7 @@ pub async fn guard_request_by_passkey(
     if req_passkey.is_none() {
         return Err((
             StatusCode::UNAUTHORIZED,
-            format!("request was not sent with passkey"),
+            String::from("request was not sent with passkey"),
         ));
     }
     let req_passkey = req_passkey
@@ -59,7 +59,10 @@ pub async fn guard_request_by_passkey(
             "{} | unauthorized request from {ip} (bad passkey) | method: {method} | uri: {uri} | body: {body:?}",
             monitor_timestamp(),
         );
-        Err((StatusCode::UNAUTHORIZED, format!("request passkey invalid")))
+        Err((
+            StatusCode::UNAUTHORIZED,
+            String::from("request passkey invalid"),
+        ))
     }
 }
 

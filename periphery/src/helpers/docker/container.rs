@@ -33,8 +33,8 @@ pub async fn container_stats(
     if output.success() {
         let res = output
             .stdout
-            .split("\n")
-            .filter(|e| e.len() > 0)
+            .split('\n')
+            .filter(|e| !e.is_empty())
             .map(|e| {
                 let parsed =
                     serde_json::from_str(e).context(format!("failed at parsing entry {e}"))?;
@@ -43,12 +43,12 @@ pub async fn container_stats(
             .collect::<anyhow::Result<Vec<DockerContainerStats>>>()?;
         Ok(res)
     } else {
-        Err(anyhow!("{}", output.stderr.replace("\n", "")))
+        Err(anyhow!("{}", output.stderr.replace('\n', "")))
     }
 }
 
 pub async fn prune_containers() -> Log {
-    let command = format!("docker container prune -f");
+    let command = String::from("docker container prune -f");
     run_monitor_command("prune containers", command).await
 }
 
@@ -70,7 +70,7 @@ pub async fn stop_container(
         let mut log = run_monitor_command("docker stop", command).await;
         log.stderr = format!(
             "old docker version: unable to use --signal flag{}",
-            if log.stderr.len() > 0 {
+            if !log.stderr.is_empty() {
                 format!("\n\n{}", log.stderr)
             } else {
                 String::new()
@@ -96,7 +96,7 @@ pub async fn stop_and_remove_container(
         let mut log = run_monitor_command("docker stop", command).await;
         log.stderr = format!(
             "old docker version: unable to use --signal flag{}",
-            if log.stderr.len() > 0 {
+            if !log.stderr.is_empty() {
                 format!("\n\n{}", log.stderr)
             } else {
                 String::new()
@@ -218,7 +218,7 @@ fn parse_container_user(container_user: &Option<String>) -> String {
     }
 }
 
-fn parse_conversions(conversions: &Vec<Conversion>, flag: &str) -> String {
+fn parse_conversions(conversions: &[Conversion], flag: &str) -> String {
     conversions
         .iter()
         .map(|p| format!(" {flag} {}:{}", p.local, p.container))
@@ -226,7 +226,7 @@ fn parse_conversions(conversions: &Vec<Conversion>, flag: &str) -> String {
         .join("")
 }
 
-fn parse_environment(environment: &Vec<EnvironmentVar>) -> String {
+fn parse_environment(environment: &[EnvironmentVar]) -> String {
     environment
         .iter()
         .map(|p| format!(" --env {}={}", p.variable, p.value))

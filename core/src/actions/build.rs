@@ -108,7 +108,7 @@ impl State {
     }
 
     pub async fn delete_build(&self, build_id: &str, user: &RequestUser) -> anyhow::Result<Build> {
-        if self.build_action_states.busy(build_id).await {
+        if self.action_states.build.busy(build_id).await {
             return Err(anyhow!("build busy"));
         }
         let build = self
@@ -138,11 +138,12 @@ impl State {
         new_build: Build,
         user: &RequestUser,
     ) -> anyhow::Result<Build> {
-        if self.build_action_states.busy(&new_build.id).await {
+        if self.action_states.build.busy(&new_build.id).await {
             return Err(anyhow!("build busy"));
         }
         let id = new_build.id.clone();
-        self.build_action_states
+        self.action_states
+            .build
             .update_entry(id.clone(), |entry| {
                 entry.updating = true;
             })
@@ -150,7 +151,8 @@ impl State {
 
         let res = self.update_build_inner(new_build, user).await;
 
-        self.build_action_states
+        self.action_states
+            .build
             .update_entry(id.clone(), |entry| {
                 entry.updating = false;
             })
@@ -245,16 +247,18 @@ impl State {
     }
 
     pub async fn build(&self, build_id: &str, user: &RequestUser) -> anyhow::Result<Update> {
-        if self.build_action_states.busy(build_id).await {
+        if self.action_states.build.busy(build_id).await {
             return Err(anyhow!("build busy"));
         }
-        self.build_action_states
+        self.action_states
+            .build
             .update_entry(build_id.to_string(), |entry| {
                 entry.building = true;
             })
             .await;
         let res = self.build_inner(build_id, user).await;
-        self.build_action_states
+        self.action_states
+            .build
             .update_entry(build_id.to_string(), |entry| {
                 entry.building = false;
             })
@@ -629,13 +633,13 @@ impl State {
     //         return Err(anyhow!("build busy"));
     //     }
     //     {
-    //         let mut lock = self.build_action_states.lock().await;
+    //         let mut lock = self.action_states.build.lock().await;
     //         let entry = lock.entry(build_id.to_string()).or_default();
     //         entry.recloning = true;
     //     }
     //     let res = self.reclone_build_inner(build_id, user).await;
     //     {
-    //         let mut lock = self.build_action_states.lock().await;
+    //         let mut lock = self.action_states.build.lock().await;
     //         let entry = lock.entry(build_id.to_string()).or_default();
     //         entry.recloning = false;
     //     }

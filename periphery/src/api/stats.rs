@@ -233,7 +233,7 @@ impl StatsClient {
     fn get_cpus(&self) -> Vec<SingleCpuUsage> {
         self.sys
             .cpus()
-            .into_iter()
+            .iter()
             .map(|cpu| SingleCpuUsage {
                 name: cpu.name().to_string(),
                 usage: cpu.cpu_usage(),
@@ -272,7 +272,7 @@ impl StatsClient {
         let used_gb = total_gb - free_gb;
         let mut read_bytes = 0;
         let mut write_bytes = 0;
-        for (_, process) in self.sys.processes() {
+        for process in self.sys.processes().values() {
             let disk_usage = process.disk_usage();
             read_bytes += disk_usage.read_bytes;
             write_bytes += disk_usage.written_bytes;
@@ -290,7 +290,7 @@ impl StatsClient {
         let mut comps: Vec<_> = self
             .sys
             .components()
-            .into_iter()
+            .iter()
             .map(|c| SystemComponent {
                 label: c.label().to_string(),
                 temp: c.temperature(),
@@ -301,8 +301,8 @@ impl StatsClient {
         comps.sort_by(|a, b| {
             if a.critical.is_some() {
                 if b.critical.is_some() {
-                    let a_perc = a.temp as f32 / *a.critical.as_ref().unwrap() as f32;
-                    let b_perc = b.temp as f32 / *b.critical.as_ref().unwrap() as f32;
+                    let a_perc = a.temp / *a.critical.as_ref().unwrap();
+                    let b_perc = b.temp / *b.critical.as_ref().unwrap();
                     if a_perc > b_perc {
                         Ordering::Less
                     } else {
@@ -311,12 +311,10 @@ impl StatsClient {
                 } else {
                     Ordering::Less
                 }
+            } else if b.critical.is_some() {
+                Ordering::Greater
             } else {
-                if b.critical.is_some() {
-                    Ordering::Greater
-                } else {
-                    Ordering::Equal
-                }
+                Ordering::Equal
             }
         });
         comps
@@ -326,7 +324,7 @@ impl StatsClient {
         let mut procs: Vec<_> = self
             .sys
             .processes()
-            .into_iter()
+            .iter()
             .map(|(pid, p)| {
                 let disk_usage = p.disk_usage();
                 SystemProcess {

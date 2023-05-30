@@ -101,7 +101,7 @@ impl MonitorClient {
     ) -> anyhow::Result<Deployment> {
         self.post::<&Deployment, _>("/api/deployment/create_full", deployment)
             .await
-            .context(format!("failed at creating full deployment"))
+            .context(String::from("failed at creating full deployment"))
     }
 
     pub async fn copy_deployment(

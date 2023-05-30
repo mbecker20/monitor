@@ -25,7 +25,7 @@ pub async fn pull(
     }
     logs.push(pull_log);
     if let Some(on_pull) = on_pull {
-        if on_pull.path.len() > 0 && on_pull.command.len() > 0 {
+        if !on_pull.path.is_empty() && !on_pull.command.is_empty() {
             path.push(&on_pull.path);
             let path = path.display().to_string();
             let on_pull_log =
@@ -56,7 +56,7 @@ pub async fn clone_repo(
     let clone_log = clone(repo, &destination, &branch, access_token).await;
     let mut logs = vec![clone_log];
     if let Some(command) = on_clone {
-        if command.path.len() > 0 && command.command.len() > 0 {
+        if !command.path.is_empty() && !command.command.is_empty() {
             let on_clone_path = repo_dir.join(&command.path);
             let on_clone_log = run_monitor_command(
                 "on clone",
@@ -67,7 +67,7 @@ pub async fn clone_repo(
         }
     }
     if let Some(command) = on_pull {
-        if command.path.len() > 0 && command.command.len() > 0 {
+        if !command.path.is_empty() && !command.command.is_empty() {
             let on_pull_path = repo_dir.join(&command.path);
             let on_pull_log = run_monitor_command(
                 "on pull",
@@ -100,7 +100,7 @@ async fn clone(
     let start_ts = monitor_timestamp();
     let output = async_run_command(&command).await;
     let success = output.success();
-    let (command, stderr) = if access_token_at.len() > 0 {
+    let (command, stderr) = if !access_token_at.is_empty() {
         let access_token = access_token.unwrap();
         (
             command.replace(&access_token, "<TOKEN>"),

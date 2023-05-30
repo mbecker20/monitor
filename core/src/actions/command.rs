@@ -94,7 +94,7 @@ impl State {
         command_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<PeripheryCommand> {
-        if self.command_action_states.busy(command_id).await {
+        if self.action_states.command.busy(command_id).await {
             return Err(anyhow!("command busy"));
         }
         let command = self
@@ -172,16 +172,18 @@ impl State {
         command_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.command_action_states.busy(command_id).await {
+        if self.action_states.command.busy(command_id).await {
             return Err(anyhow!("command busy"));
         }
-        self.command_action_states
+        self.action_states
+            .command
             .update_entry(command_id.to_string(), |entry| {
                 entry.running = true;
             })
             .await;
         let res = self.run_command_inner(command_id, user).await;
-        self.command_action_states
+        self.action_states
+            .command
             .update_entry(command_id.to_string(), |entry| {
                 entry.running = false;
             })

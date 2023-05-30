@@ -125,12 +125,12 @@ impl TryFrom<&str> for Version {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let vals = value
-            .split(".")
+            .split('.')
             .map(|v| anyhow::Ok(v.parse().context("failed at parsing value into i32")?))
             .collect::<anyhow::Result<Vec<i32>>>()?;
         let version = Version {
             major: *vals
-                .get(0)
+                .first()
                 .ok_or(anyhow!("must include at least major version"))?,
             minor: *vals.get(1).unwrap_or(&0),
             patch: *vals.get(2).unwrap_or(&0),

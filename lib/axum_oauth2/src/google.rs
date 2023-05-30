@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context};
 use axum::Extension;
 use jwt::Token;
 use reqwest::StatusCode;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 
 use crate::random_string;
@@ -68,7 +68,7 @@ impl GoogleOauthClient {
     }
 
     pub async fn get_access_token(&self, code: &str) -> anyhow::Result<AccessTokenResponse> {
-        self.post::<(), _>(
+        self.post::<_>(
             "https://oauth2.googleapis.com/token",
             &[
                 ("client_id", self.client_id.as_str()),
@@ -89,7 +89,7 @@ impl GoogleOauthClient {
         Ok(t.claims().to_owned())
     }
 
-    async fn post<B: Serialize, R: DeserializeOwned>(
+    async fn post<R: DeserializeOwned>(
         &self,
         endpoint: &str,
         body: &[(&str, &str)],

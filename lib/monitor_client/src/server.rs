@@ -82,7 +82,7 @@ impl MonitorClient {
     pub async fn create_full_server(&self, server: &Server) -> anyhow::Result<Server> {
         self.post::<&Server, _>("/api/server/create_full", server)
             .await
-            .context(format!("failed at creating full server"))
+            .context(String::from("failed at creating full server"))
     }
 
     pub async fn delete_server(&self, id: &str) -> anyhow::Result<Server> {

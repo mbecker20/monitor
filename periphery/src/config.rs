@@ -55,8 +55,8 @@ pub fn load() -> (u16, PeripheryConfigExtension, HomeDirExtension) {
             &parse_comma_seperated(&env.config_paths)
                 .expect("failed to parse config paths on environment into comma seperated list"),
         )
-        .into_iter()
-        .map(|p| p.replace("~", &home_dir))
+        .iter()
+        .map(|p| p.replace('~', &home_dir))
         .collect::<Vec<_>>();
     let env_match_keywords = parse_comma_seperated(&env.config_keywords)
         .expect("failed to parse environemt CONFIG_KEYWORDS into comma seperated list");
@@ -64,7 +64,7 @@ pub fn load() -> (u16, PeripheryConfigExtension, HomeDirExtension) {
         .config_keyword
         .as_ref()
         .unwrap_or(&env_match_keywords)
-        .into_iter()
+        .iter()
         .map(|kw| kw.as_str());
     let config = parse_config_paths::<PeripheryConfig>(
         config_paths.clone(),
@@ -87,18 +87,18 @@ fn print_startup_log(config_paths: Vec<String>, config: &PeripheryConfig) {
     let mut config_for_print = config.clone();
     config_for_print.github_accounts = config_for_print
         .github_accounts
-        .into_iter()
-        .map(|(a, _)| (a, "<SECRET>".to_string()))
+        .into_keys()
+        .map(|account| (account, "<SECRET>".to_string()))
         .collect();
     config_for_print.docker_accounts = config_for_print
         .docker_accounts
-        .into_iter()
-        .map(|(a, _)| (a, "<SECRET>".to_string()))
+        .into_keys()
+        .map(|account| (account, "<SECRET>".to_string()))
         .collect();
     config_for_print.secrets = config_for_print
         .secrets
-        .into_iter()
-        .map(|(s, _)| (s, "<SECRET>".to_string()))
+        .into_keys()
+        .map(|secret| (secret, "<SECRET>".to_string()))
         .collect();
     config_for_print.passkeys = config_for_print
         .passkeys

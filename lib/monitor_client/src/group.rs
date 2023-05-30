@@ -25,7 +25,7 @@ impl MonitorClient {
     pub async fn create_full_group(&self, group: &Group) -> anyhow::Result<Group> {
         self.post::<&Group, _>("/api/group/create_full", group)
             .await
-            .context(format!("failed at creating full group"))
+            .context(String::from("failed at creating full group"))
     }
 
     pub async fn delete_group(&self, id: &str) -> anyhow::Result<Group> {

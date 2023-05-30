@@ -12,6 +12,7 @@ pub use bollard::service::{ImageSummary, Network};
 pub mod traits;
 
 mod action;
+mod alert;
 mod build;
 mod config;
 mod deployment;
@@ -24,6 +25,7 @@ mod update;
 mod user;
 
 pub use action::*;
+pub use alert::*;
 pub use build::*;
 pub use config::*;
 pub use deployment::*;
@@ -86,13 +88,25 @@ pub enum AccountType {
 
 #[typeshare]
 #[derive(
-    Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy, Diff,
+    Serialize,
+    Deserialize,
+    Debug,
+    Default,
+    Display,
+    EnumString,
+    PartialEq,
+    Hash,
+    Eq,
+    Clone,
+    Copy,
+    Diff,
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[diff(attr(#[derive(Debug, PartialEq, Serialize)]))]
 pub enum Operation {
     // do nothing
+    #[default]
     None,
 
     // server
@@ -149,12 +163,6 @@ pub enum Operation {
     AutoPull,
 }
 
-impl Default for Operation {
-    fn default() -> Self {
-        Operation::None
-    }
-}
-
 #[typeshare]
 #[derive(
     Serialize,
@@ -170,21 +178,17 @@ impl Default for Operation {
     Eq,
     PartialOrd,
     Ord,
+    Default,
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[diff(attr(#[derive(Debug, PartialEq, Serialize)]))]
 pub enum PermissionLevel {
+    #[default]
     None,
     Read,
     Execute,
     Update,
-}
-
-impl Default for PermissionLevel {
-    fn default() -> Self {
-        PermissionLevel::None
-    }
 }
 
 impl Default for &PermissionLevel {

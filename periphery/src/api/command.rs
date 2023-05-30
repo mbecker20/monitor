@@ -14,7 +14,7 @@ pub fn router() -> Router {
                     let command = if path.is_empty() {
                         command
                     } else {
-                        let path = path.replace("~", &home_dir);
+                        let path = path.replace('~', &home_dir);
                         format!("cd {path} && {command}")
                     };
                     let log = run_monitor_command("run command", command).await;

@@ -455,7 +455,7 @@ impl State {
     ) -> anyhow::Result<DeploymentActionState> {
         self.get_deployment_check_permissions(&id, &user, PermissionLevel::Read)
             .await?;
-        let action_state = self.deployment_action_states.get_or_default(id).await;
+        let action_state = self.action_states.deployment.get_or_default(id).await;
         Ok(action_state)
     }
 

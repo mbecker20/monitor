@@ -63,13 +63,25 @@ pub struct ProcedureStage {
 
 #[typeshare]
 #[derive(
-    Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy, Diff,
+    Serialize,
+    Deserialize,
+    Debug,
+    Display,
+    EnumString,
+    PartialEq,
+    Hash,
+    Eq,
+    Clone,
+    Copy,
+    Diff,
+    Default,
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[diff(attr(#[derive(Debug, PartialEq, Serialize)]))]
 pub enum ProcedureOperation {
     // do nothing
+    #[default]
     None,
 
     // server
@@ -90,10 +102,4 @@ pub enum ProcedureOperation {
 
     // procedure
     RunProcedure,
-}
-
-impl Default for ProcedureOperation {
-    fn default() -> Self {
-        ProcedureOperation::None
-    }
 }

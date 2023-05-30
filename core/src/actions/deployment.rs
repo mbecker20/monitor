@@ -109,7 +109,7 @@ impl State {
         stop_signal: Option<TerminationSignal>,
         stop_time: Option<i32>,
     ) -> anyhow::Result<Deployment> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
         let deployment = self
@@ -160,12 +160,13 @@ impl State {
         new_deployment: Deployment,
         user: &RequestUser,
     ) -> anyhow::Result<Deployment> {
-        if self.deployment_action_states.busy(&new_deployment.id).await {
+        if self.action_states.deployment.busy(&new_deployment.id).await {
             return Err(anyhow!("deployment busy"));
         }
         let id = new_deployment.id.clone();
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(id.clone(), |entry| {
                 entry.updating = true;
             })
@@ -173,7 +174,8 @@ impl State {
 
         let res = self.update_deployment_inner(new_deployment, user).await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(id.clone(), |entry| {
                 entry.updating = false;
             })
@@ -282,11 +284,12 @@ impl State {
         new_name: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.renaming = true;
             })
@@ -296,7 +299,8 @@ impl State {
             .rename_deployment_inner(deployment_id, new_name, user)
             .await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.renaming = false;
             })
@@ -451,10 +455,11 @@ impl State {
         user: &RequestUser,
         check_deployment_busy: bool,
     ) -> anyhow::Result<Update> {
-        if check_deployment_busy && self.deployment_action_states.busy(deployment_id).await {
+        if check_deployment_busy && self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.recloning = true;
             })
@@ -462,7 +467,8 @@ impl State {
 
         let res = self.reclone_deployment_inner(deployment_id, user).await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.recloning = false;
             })
@@ -518,10 +524,11 @@ impl State {
         stop_signal: Option<TerminationSignal>,
         stop_time: Option<i32>,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.deploying = true;
             })
@@ -531,7 +538,8 @@ impl State {
             .deploy_container_inner(deployment_id, user, stop_signal, stop_time)
             .await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.deploying = false;
             })
@@ -609,10 +617,11 @@ impl State {
         deployment_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.starting = true;
             })
@@ -620,7 +629,8 @@ impl State {
 
         let res = self.start_container_inner(deployment_id, user).await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.starting = false;
             })
@@ -683,10 +693,11 @@ impl State {
         stop_signal: Option<TerminationSignal>,
         stop_time: Option<i32>,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.stopping = true;
             })
@@ -696,7 +707,8 @@ impl State {
             .stop_container_inner(deployment_id, user, stop_signal, stop_time)
             .await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.stopping = false;
             })
@@ -764,10 +776,11 @@ impl State {
         stop_signal: Option<TerminationSignal>,
         stop_time: Option<i32>,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.removing = true;
             })
@@ -777,7 +790,8 @@ impl State {
             .remove_container_inner(deployment_id, user, stop_signal, stop_time)
             .await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.removing = false;
             })
@@ -843,10 +857,11 @@ impl State {
         deployment_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<Update> {
-        if self.deployment_action_states.busy(deployment_id).await {
+        if self.action_states.deployment.busy(deployment_id).await {
             return Err(anyhow!("deployment busy"));
         }
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.pulling = true;
             })
@@ -854,7 +869,8 @@ impl State {
 
         let res = self.pull_deployment_repo_inner(deployment_id, user).await;
 
-        self.deployment_action_states
+        self.action_states
+            .deployment
             .update_entry(deployment_id.to_string(), |entry| {
                 entry.pulling = false;
             })
