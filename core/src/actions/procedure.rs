@@ -126,7 +126,7 @@ impl State {
         {
             match operation {
                 BuildBuild => {
-                    self.get_build_check_permissions(&target_id, user, PermissionLevel::Execute)
+                    self.get_build_check_permissions(target_id, user, PermissionLevel::Execute)
                         .await?;
                 }
                 DeployContainer | StartContainer | StopContainer | RemoveContainer

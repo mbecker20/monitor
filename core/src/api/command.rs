@@ -212,7 +212,7 @@ impl State {
         id: String,
         user: &RequestUser,
     ) -> anyhow::Result<CommandActionState> {
-        self.get_command_check_permissions(&id, &user, PermissionLevel::Read)
+        self.get_command_check_permissions(&id, user, PermissionLevel::Read)
             .await?;
         let action_state = self.action_states.command.get_or_default(id).await;
         Ok(action_state)

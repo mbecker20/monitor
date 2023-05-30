@@ -85,7 +85,7 @@ impl JwtClient {
             .get::<Arc<State>>()
             .ok_or(anyhow!("failed at getting state handle"))?;
         let user = self
-            .auth_jwt_check_enabled(&jwt, &state)
+            .auth_jwt_check_enabled(&jwt, state)
             .await
             .context("failed to authenticate jwt")?;
         Ok(Arc::new(user))
@@ -137,7 +137,7 @@ impl JwtClient {
             .get::<Arc<State>>()
             .ok_or(anyhow!("failed at getting state handle"))?;
         let user = self
-            .auth_jwt(&jwt, &state)
+            .auth_jwt(&jwt, state)
             .await
             .context("failed to authenticate jwt")?;
         Ok(user)

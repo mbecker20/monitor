@@ -32,7 +32,7 @@ impl State {
                 continue;
             }
             for (server, res) in servers.unwrap() {
-                if let Err(_) = res {
+                if res.is_err() {
                     if let Some(slack) = &self.slack {
                         let (header, info) = generate_unreachable_message(&server);
                         let res = slack.send_message_with_header(&header, info.clone()).await;
@@ -361,7 +361,7 @@ impl State {
             })
             .filter(|s| !s.is_empty())
             .collect::<Vec<_>>();
-        if info.len() > 0 {
+        if !info.is_empty() {
             let region = if let Some(region) = &server.region {
                 format!(" ({region})")
             } else {
@@ -486,7 +486,7 @@ impl State {
                 .slack
                 .as_ref()
                 .unwrap()
-                .send_message(format!("INFO | daily update"), blocks)
+                .send_message(String::from("INFO | daily update"), blocks)
                 .await;
             if let Err(e) = res {
                 eprintln!(
@@ -513,7 +513,7 @@ fn generate_unreachable_message(server: &Server) -> (String, Option<String>) {
         .map(|u| format!("<@{u}>"))
         .collect::<Vec<_>>()
         .join(" ");
-    let info = if to_notify.len() > 0 {
+    let info = if !to_notify.is_empty() {
         Some(to_notify)
     } else {
         None
@@ -522,7 +522,7 @@ fn generate_unreachable_message(server: &Server) -> (String, Option<String>) {
 }
 
 fn generate_to_notify(server: &Server) -> Option<String> {
-    if server.to_notify.len() > 0 {
+    if !server.to_notify.is_empty() {
         Some(
             server
                 .to_notify

@@ -133,7 +133,7 @@ impl State {
             dep_res.into_iter().collect::<anyhow::Result<Vec<_>>>()?;
             build_res.into_iter().collect::<anyhow::Result<Vec<_>>>()?;
             group_res?;
-            self.db.servers.delete_one(&server_id).await?;
+            self.db.servers.delete_one(server_id).await?;
             anyhow::Ok(())
         };
 

@@ -570,13 +570,12 @@ impl State {
             });
             while let Some(msg) = ws_recv.next().await {
                 match msg {
-                    Ok(msg) => match msg {
-                        AxumMessage::Close(_) => {
+                    Ok(msg) => {
+                        if let AxumMessage::Close(_) = msg {
                             cancel.cancel();
                             return;
                         }
-                        _ => {}
-                    },
+                    }
                     Err(_) => {
                         cancel.cancel();
                         return;
@@ -678,7 +677,7 @@ impl State {
         id: String,
         user: &RequestUser,
     ) -> anyhow::Result<ServerActionState> {
-        self.get_server_check_permissions(&id, &user, PermissionLevel::Read)
+        self.get_server_check_permissions(&id, user, PermissionLevel::Read)
             .await?;
         let action_state = self.action_states.server.get_or_default(id).await;
         Ok(action_state)

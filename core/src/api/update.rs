@@ -35,16 +35,13 @@ pub fn router() -> Router {
                             .unwrap_or_default()
                     })
                     .unwrap_or_default();
-                let operations = value
-                    .get("operations")
-                    .map(|o| {
-                        let o = o.as_str().unwrap_or_default();
-                        if o.len() == 0 {
-                            return None;
-                        }
-                        parse_comma_seperated_list::<String>(o).ok()
-                    })
-                    .flatten();
+                let operations = value.get("operations").and_then(|o| {
+                    let o = o.as_str().unwrap_or_default();
+                    if o.is_empty() {
+                        return None;
+                    }
+                    parse_comma_seperated_list::<String>(o).ok()
+                });
                 let updates = state
                     .list_updates(target, offset, show_builds, operations, &user)
                     .await
@@ -118,7 +115,7 @@ impl State {
                         let build = self
                             .get_build_check_permissions(build_id, user, PermissionLevel::Read)
                             .await;
-                        if let Ok(_) = build {
+                        if build.is_ok() {
                             doc! {
                                 "$or": [
                                     {"target": to_bson(&target).unwrap()},

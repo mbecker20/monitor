@@ -203,30 +203,22 @@ impl State {
 
         // filter out any volumes, ports, env vars, extra args which are or contain empty strings
         // these could only happen by accident
-        new_deployment.docker_run_args.volumes = new_deployment
+        new_deployment
             .docker_run_args
             .volumes
-            .into_iter()
-            .filter(|v| !empty_or_only_spaces(&v.local) && !empty_or_only_spaces(&v.container))
-            .collect();
-        new_deployment.docker_run_args.ports = new_deployment
+            .retain(|v| !empty_or_only_spaces(&v.local) && !empty_or_only_spaces(&v.container));
+        new_deployment
             .docker_run_args
             .ports
-            .into_iter()
-            .filter(|p| !empty_or_only_spaces(&p.local) && !empty_or_only_spaces(&p.container))
-            .collect();
-        new_deployment.docker_run_args.environment = new_deployment
+            .retain(|p| !empty_or_only_spaces(&p.local) && !empty_or_only_spaces(&p.container));
+        new_deployment
             .docker_run_args
             .environment
-            .into_iter()
-            .filter(|e| !empty_or_only_spaces(&e.variable) && !empty_or_only_spaces(&e.value))
-            .collect();
-        new_deployment.docker_run_args.extra_args = new_deployment
+            .retain(|e| !empty_or_only_spaces(&e.variable) && !empty_or_only_spaces(&e.value));
+        new_deployment
             .docker_run_args
             .extra_args
-            .into_iter()
-            .filter(|a| a.len() != 0)
-            .collect();
+            .retain(|a| !a.is_empty());
 
         self.db
             .deployments
@@ -569,7 +561,7 @@ impl State {
             let version = if let Some(version) = &deployment.build_version {
                 version.clone()
             } else {
-                build.version.clone()
+                build.version
             };
             deployment.docker_run_args.image = format!("{image}:{}", version.to_string());
             Some(version)

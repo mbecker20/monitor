@@ -62,7 +62,7 @@ impl State {
             }
         } else {
             let _ = socket
-                .send(Message::Text(format!("failed to get jwt message")))
+                .send(Message::Text(String::from("failed to get jwt message")))
                 .await;
             let _ = socket.close().await;
             None

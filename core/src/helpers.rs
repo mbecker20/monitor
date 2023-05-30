@@ -29,13 +29,13 @@ where
             return true;
         }
     }
-    return false;
+    false
 }
 
 pub fn parse_comma_seperated_list<T: FromStr>(comma_sep_list: &str) -> anyhow::Result<Vec<T>> {
     comma_sep_list
-        .split(",")
-        .filter(|item| item.len() > 0)
+        .split(',')
+        .filter(|item| !item.is_empty())
         .map(|item| {
             let item = item
                 .parse()
@@ -57,7 +57,7 @@ pub fn get_image_name(build: &Build) -> String {
 }
 
 pub fn empty_or_only_spaces(word: &str) -> bool {
-    if word.len() == 0 {
+    if word.is_empty() {
         return true;
     }
     for char in word.chars() {
@@ -65,7 +65,7 @@ pub fn empty_or_only_spaces(word: &str) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 
 #[derive(Default)]
@@ -75,7 +75,7 @@ pub struct Cache<T: Clone + Default> {
 
 impl<T: Clone + Default> Cache<T> {
     pub async fn get(&self, key: &str) -> Option<T> {
-        self.cache.read().await.get(key).map(|e| e.clone())
+        self.cache.read().await.get(key).cloned()
     }
 
     pub async fn get_or_default(&self, key: String) -> T {
@@ -83,7 +83,7 @@ impl<T: Clone + Default> Cache<T> {
         cache.entry(key).or_default().clone()
     }
 
-    pub async fn get_list(&self, filter: Option<impl Fn(&String, &T) -> bool>) -> Vec<T> {
+    pub async fn _get_list(&self, filter: Option<impl Fn(&String, &T) -> bool>) -> Vec<T> {
         let cache = self.cache.read().await;
         match filter {
             Some(filter) => cache
@@ -99,7 +99,7 @@ impl<T: Clone + Default> Cache<T> {
         self.cache.write().await.insert(key, val);
     }
 
-    pub async fn update_entry(&self, key: String, handler: impl Fn(&mut T) -> ()) {
+    pub async fn update_entry(&self, key: String, handler: impl Fn(&mut T)) {
         let mut cache = self.cache.write().await;
         handler(cache.entry(key).or_default());
     }

@@ -90,9 +90,9 @@ async fn callback(
             let user = User {
                 username: google_user
                     .email
-                    .split("@")
+                    .split('@')
                     .collect::<Vec<&str>>()
-                    .get(0)
+                    .first()
                     .unwrap()
                     .to_string(),
                 avatar: google_user.picture.into(),

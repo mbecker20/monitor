@@ -409,7 +409,7 @@ impl State {
             .collect();
         let mut servers: Vec<Server> = Vec::new();
         for d in &deployments {
-            if servers.iter().find(|s| s.id == d.server_id).is_none() {
+            if !servers.iter().any(|s| s.id == d.server_id) {
                 servers.push(self.db.get_server(&d.server_id).await?)
             }
         }
@@ -453,7 +453,7 @@ impl State {
         id: String,
         user: &RequestUser,
     ) -> anyhow::Result<DeploymentActionState> {
-        self.get_deployment_check_permissions(&id, &user, PermissionLevel::Read)
+        self.get_deployment_check_permissions(&id, user, PermissionLevel::Read)
             .await?;
         let action_state = self.action_states.deployment.get_or_default(id).await;
         Ok(action_state)
@@ -466,7 +466,7 @@ impl State {
         tail: Option<u32>,
     ) -> anyhow::Result<Log> {
         let deployment = self
-            .get_deployment_check_permissions(&id, &user, PermissionLevel::Read)
+            .get_deployment_check_permissions(id, user, PermissionLevel::Read)
             .await?;
         let server = self.db.get_server(&deployment.server_id).await?;
         let log = self
@@ -482,7 +482,7 @@ impl State {
         user: &RequestUser,
     ) -> anyhow::Result<DockerContainerStats> {
         let deployment = self
-            .get_deployment_check_permissions(&id, &user, PermissionLevel::Read)
+            .get_deployment_check_permissions(id, user, PermissionLevel::Read)
             .await?;
         let server = self.db.get_server(&deployment.server_id).await?;
         let stats = self
@@ -498,7 +498,7 @@ impl State {
         user: &RequestUser,
     ) -> anyhow::Result<String> {
         let deployment = self
-            .get_deployment_check_permissions(&id, &user, PermissionLevel::Read)
+            .get_deployment_check_permissions(id, user, PermissionLevel::Read)
             .await?;
         if deployment.build_id.is_some() {
             let latest_deploy_update = self

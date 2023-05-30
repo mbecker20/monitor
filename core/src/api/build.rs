@@ -295,7 +295,7 @@ impl State {
         id: String,
         user: &RequestUser,
     ) -> anyhow::Result<BuildActionState> {
-        self.get_build_check_permissions(&id, &user, PermissionLevel::Read)
+        self.get_build_check_permissions(&id, user, PermissionLevel::Read)
             .await?;
         let action_state = self.action_states.build.get_or_default(id).await;
         Ok(action_state)
@@ -307,7 +307,7 @@ impl State {
         user: &RequestUser,
         query: BuildVersionsQuery,
     ) -> anyhow::Result<Vec<BuildVersionsReponse>> {
-        self.get_build_check_permissions(&id, user, PermissionLevel::Read)
+        self.get_build_check_permissions(id, user, PermissionLevel::Read)
             .await?;
         let mut filter = doc! {
             "target": {

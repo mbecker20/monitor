@@ -84,13 +84,12 @@ pub async fn ws_handler(
 
         while let Some(msg) = ws_reciever.next().await {
             match msg {
-                Ok(msg) => match msg {
-                    Message::Close(_) => {
+                Ok(msg) => {
+                    if let Message::Close(_) = msg {
                         cancel.cancel();
                         return;
                     }
-                    _ => {}
-                },
+                }
                 Err(_) => {
                     cancel.cancel();
                     return;

@@ -190,11 +190,8 @@ impl State {
         // filter out any build args that contain empty strings
         // these could only happen by accident
         new_build.docker_build_args = new_build.docker_build_args.map(|mut args| {
-            args.build_args = args
-                .build_args
-                .into_iter()
-                .filter(|a| !empty_or_only_spaces(&a.variable) && !empty_or_only_spaces(&a.value))
-                .collect();
+            args.build_args
+                .retain(|a| !empty_or_only_spaces(&a.variable) && !empty_or_only_spaces(&a.value));
             args
         });
 
@@ -482,14 +479,14 @@ impl State {
                 }
             }
 
-            if redeploys.len() > 0 {
+            if !redeploys.is_empty() {
                 update.logs.push(Log::simple(
                     "redeploy",
                     format!("redeployed deployments: {}", redeploys.join(", ")),
                 ))
             }
 
-            if redeploy_failures.len() > 0 {
+            if !redeploy_failures.is_empty() {
                 update.logs.push(Log::simple(
                     "redeploy failures",
                     redeploy_failures.join("\n"),

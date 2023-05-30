@@ -39,11 +39,11 @@ pub fn router(config: &CoreConfig) -> Router {
                 Json(LoginOptions {
                     local: state.config.local_auth,
                     github: state.config.github_oauth.enabled
-                        && state.config.github_oauth.id.len() > 0
-                        && state.config.github_oauth.secret.len() > 0,
+                        && !state.config.github_oauth.id.is_empty()
+                        && !state.config.github_oauth.secret.is_empty(),
                     google: state.config.google_oauth.enabled
-                        && state.config.google_oauth.id.len() > 0
-                        && state.config.google_oauth.secret.len() > 0,
+                        && !state.config.google_oauth.id.is_empty()
+                        && !state.config.google_oauth.secret.is_empty(),
                 })
             }),
         )
@@ -62,15 +62,15 @@ pub fn router(config: &CoreConfig) -> Router {
     }
 
     if config.github_oauth.enabled
-        && config.github_oauth.id.len() > 0
-        && config.github_oauth.secret.len() > 0
+        && !config.github_oauth.id.is_empty()
+        && !config.github_oauth.secret.is_empty()
     {
         router = router.nest("/github", github::router(config));
     }
 
     if config.google_oauth.enabled
-        && config.google_oauth.id.len() > 0
-        && config.google_oauth.secret.len() > 0
+        && !config.google_oauth.id.is_empty()
+        && !config.google_oauth.secret.is_empty()
     {
         router = router.nest("/google", google::router(config));
     }

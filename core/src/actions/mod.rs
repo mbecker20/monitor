@@ -22,8 +22,7 @@ impl State {
             .updates
             .create_one(update.clone())
             .await
-            .context("failed to insert update into db")?
-            .to_string();
+            .context("failed to insert update into db")?;
         let id = update.id.clone();
         let _ = self.send_update(update).await;
         Ok(id)

@@ -50,11 +50,11 @@ pub fn router() -> Router {
         )
 }
 
-impl Into<ApiSecret> for CreateSecretBody {
-    fn into(self) -> ApiSecret {
+impl From<CreateSecretBody> for ApiSecret {
+    fn from(value: CreateSecretBody) -> ApiSecret {
         ApiSecret {
-            name: self.name,
-            expires: self.expires,
+            name: value.name,
+            expires: value.expires,
             created_at: monitor_timestamp(),
             ..Default::default()
         }

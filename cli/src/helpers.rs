@@ -3,7 +3,7 @@ use std::{
     fs::{self, File},
     io::{Read, Write},
     net::IpAddr,
-    path::PathBuf,
+    path::{PathBuf, Path},
     str::FromStr,
 };
 
@@ -86,7 +86,7 @@ pub fn gen_core_config(sub_matches: &ArgMatches) {
         passkey: generate_secret(30),
     };
 
-    write_to_toml(&path, &config);
+    write_to_toml(&path, config);
 
     println!(
         "\n✅ {} has been generated at {path} ✅\n",
@@ -228,7 +228,7 @@ pub fn start_core(sub_matches: &ArgMatches) {
 
     let add_host = sub_matches
         .get_one::<bool>("add-internal-host")
-        .map(|p| *p)
+        .cloned()
         .unwrap_or(true);
 
     println!(
@@ -307,8 +307,8 @@ pub fn gen_periphery_config(sub_matches: &ArgMatches) {
         .get_one::<String>("allowed-ips")
         .map(|p| p.as_str())
         .unwrap_or("")
-        .split(",")
-        .filter(|ip| ip.len() > 0)
+        .split(',')
+        .filter(|ip| !ip.is_empty())
         .map(|ip| {
             ip.parse()
                 .expect("given allowed ip address is not valid ip")
@@ -320,7 +320,7 @@ pub fn gen_periphery_config(sub_matches: &ArgMatches) {
         .map(|p| p.as_str())
         .unwrap_or("~/.monitor/repos")
         .to_string()
-        .replace("~", env::var("HOME").unwrap().as_str())
+        .replace('~', env::var("HOME").unwrap().as_str())
         .parse()
         .expect("failed to parse --repo_dir as path");
 
@@ -335,7 +335,7 @@ pub fn gen_periphery_config(sub_matches: &ArgMatches) {
         docker_accounts: Default::default(),
     };
 
-    write_to_toml(&path, &config);
+    write_to_toml(&path, config);
 
     println!(
         "\n✅ {} generated at {path} ✅\n",
@@ -564,7 +564,7 @@ pub fn gen_periphery_service_file(config_path: &str) {
 }
 
 fn write_to_toml(path: &str, toml: impl Serialize) {
-    let path = PathBuf::from_str(&path.replace("~", &std::env::var("HOME").unwrap()))
+    let path = PathBuf::from_str(&path.replace('~', &std::env::var("HOME").unwrap()))
         .expect("not a valid path");
     let _ = fs::create_dir_all(pop_path(&path));
     fs::write(
@@ -574,8 +574,8 @@ fn write_to_toml(path: &str, toml: impl Serialize) {
     .expect("❌ failed to write toml to file ❌");
 }
 
-fn pop_path(path: &PathBuf) -> PathBuf {
-    let mut clone = path.clone();
+fn pop_path(path: &Path) -> PathBuf {
+    let mut clone = path.to_owned();
     clone.pop();
     clone
 }

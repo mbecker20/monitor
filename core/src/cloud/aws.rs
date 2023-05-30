@@ -22,8 +22,7 @@ pub async fn create_ec2_client(
     std::env::set_var("AWS_SECRET_ACCESS_KEY", secret_access_key);
     let region = Region::new(region);
     let config = aws_config::from_env().region(region).load().await;
-    let client = Client::new(&config);
-    client
+    Client::new(&config)
 }
 
 pub struct Ec2Instance {
@@ -96,7 +95,7 @@ pub async fn create_instance_with_ami(
         .ok_or(anyhow!("instance does not have instance_id"))?
         .to_string();
     for _ in 0..MAX_POLL_TRIES {
-        let state_name = get_ec2_instance_state_name(&client, &instance_id).await?;
+        let state_name = get_ec2_instance_state_name(client, &instance_id).await?;
         if state_name == Some(InstanceStateName::Running) {
             let ip = if assign_public_ip {
                 get_ec2_instance_public_ip(client, &instance_id).await?

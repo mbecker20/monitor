@@ -77,14 +77,12 @@ pub async fn ws_handler(
         });
         while let Some(msg) = ws_reciever.next().await {
             match msg {
-                Ok(msg) => match msg {
-                    AxumMessage::Close(_) => {
-                        // println!("CLOSE");
+                Ok(msg) => {
+                    if let AxumMessage::Close(_) = msg {
                         cancel.cancel();
                         return;
                     }
-                    _ => {}
-                },
+                }
                 Err(_) => {
                     // println!("CLOSE FROM ERR");
                     cancel.cancel();
