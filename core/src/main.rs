@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     let app = tokio::spawn(async move {
         let (config, spa_router, index_html_service, port) = config::load();
 
-        println!("starting monitor core on port {}...", config.port);
+        println!("starting monitor core on port {}...", port);
 
         let app = Router::new()
             .nest("/api", api::router())
