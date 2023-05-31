@@ -536,6 +536,11 @@ impl State {
             .instance_type
             .as_ref()
             .unwrap_or(&self.config.aws.default_instance_type);
+        let instance_type = if !instance_type.is_empty() {
+            instance_type
+        } else {
+            &self.config.aws.default_instance_type
+        };
         let subnet_id = aws_config
             .subnet_id
             .as_ref()
