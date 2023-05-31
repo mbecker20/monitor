@@ -148,6 +148,9 @@ impl State {
         update.logs.push(log);
 
         self.update_update(update).await?;
+
+        self.update_status_cache(&server).await;
+
         Ok(server)
     }
 

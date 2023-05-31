@@ -69,15 +69,14 @@ pub async fn ws_handler(
                     return;
                 }
                 let user = user.unwrap().unwrap(); // already handle cases where this panics in the above early return
-                match user_can_see_update(&user, &user.id, &update.target, &state.db).await {
-                    Ok(_) => {
-                        let _ = ws_sender
-                            .send(Message::Text(serde_json::to_string(&update).unwrap()))
-                            .await;
-                    }
-                    Err(_) => {
-                        // make these error visible in some way
-                    }
+                let res = user_can_see_update(&user, &user.id, &update.target, &state.db).await;
+                if let Err(_e) = res {
+                    // handle
+                    return;
+                } else {
+                    let _ = ws_sender
+                        .send(Message::Text(serde_json::to_string(&update).unwrap()))
+                        .await;
                 }
             }
         });

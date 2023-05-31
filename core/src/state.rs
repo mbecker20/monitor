@@ -11,7 +11,9 @@ use types::{
 };
 
 use crate::{
-    cache::CachedDeploymentStatus, helpers::Cache, monitoring::AlertStatus,
+    cache::{CachedDeploymentStatus, CachedServerStatus},
+    helpers::Cache,
+    monitoring::AlertStatus,
     ws::update::UpdateWsChannel,
 };
 
@@ -28,6 +30,7 @@ pub struct State {
     pub action_states: ActionStates,
     pub server_alert_status: Cache<AlertStatus>, // (server_id, AlertStatus)
     pub deployment_status_cache: Cache<Arc<CachedDeploymentStatus>>,
+    pub server_status_cache: Cache<Arc<CachedServerStatus>>,
 }
 
 impl State {
@@ -41,6 +44,7 @@ impl State {
             action_states: Default::default(),
             server_alert_status: Default::default(),
             deployment_status_cache: Default::default(),
+            server_status_cache: Default::default(),
         };
         let state = Arc::new(state);
         let state_clone = state.clone();

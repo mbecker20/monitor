@@ -33,18 +33,32 @@ pub struct Ec2Instance {
 const POLL_RATE_SECS: u64 = 2;
 const MAX_POLL_TRIES: usize = 30;
 
+pub struct CreateInstanceParams<'a> {
+    pub client: &'a Client,
+    pub instance_name: String,
+    pub ami_id: &'a str,
+    pub instance_type: &'a str,
+    pub subnet_id: &'a str,
+    pub security_group_ids: Vec<String>,
+    pub volume_size_gb: i32,
+    pub key_pair_name: &'a str,
+    pub assign_public_ip: bool,
+}
+
 /// this will only resolve after the instance is running
 /// should still poll the periphery agent after creation
 pub async fn create_instance_with_ami(
-    client: &Client,
-    instance_name: &str,
-    ami_id: &str,
-    instance_type: &str,
-    subnet_id: &str,
-    security_group_ids: Vec<String>,
-    volume_size_gb: i32,
-    key_pair_name: &str,
-    assign_public_ip: bool,
+    CreateInstanceParams {
+        client,
+        instance_name,
+        ami_id,
+        instance_type,
+        subnet_id,
+        security_group_ids,
+        volume_size_gb,
+        key_pair_name,
+        assign_public_ip,
+    }: CreateInstanceParams<'_>,
 ) -> anyhow::Result<Ec2Instance> {
     let instance_type = InstanceType::from(instance_type);
     if let InstanceType::Unknown(t) = instance_type {

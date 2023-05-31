@@ -14,7 +14,8 @@ use types::{
 use crate::{
     auth::RequestUser,
     cloud::aws::{
-        create_ec2_client, create_instance_with_ami, terminate_ec2_instance, Ec2Instance,
+        create_ec2_client, create_instance_with_ami, terminate_ec2_instance, CreateInstanceParams,
+        Ec2Instance,
     },
     helpers::empty_or_only_spaces,
     state::State,
@@ -557,9 +558,9 @@ impl State {
             .assign_public_ip
             .as_ref()
             .unwrap_or(&self.config.aws.default_assign_public_ip);
-        let instance = create_instance_with_ami(
-            &aws_client,
-            &format!("BUILDER-{}-v{}", build.name, build.version.to_string()),
+        let params = CreateInstanceParams {
+            client: &aws_client,
+            instance_name: format!("BUILDER-{}-v{}", build.name, build.version.to_string()),
             ami_id,
             instance_type,
             subnet_id,
@@ -567,8 +568,8 @@ impl State {
             volume_size_gb,
             key_pair_name,
             assign_public_ip,
-        )
-        .await?;
+        };
+        let instance = create_instance_with_ami(params).await?;
         let instance_id = &instance.instance_id;
         let start_log = Log {
             stage: "start build instance".to_string(),

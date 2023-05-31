@@ -569,6 +569,10 @@ impl State {
             None
         };
         let server = self.db.get_server(&deployment.server_id).await?;
+        if !server.enabled {
+            return Err(anyhow!("cannot deploy on disabled server"));
+        }
+
         let mut update = Update {
             target: UpdateTarget::Deployment(deployment_id.to_string()),
             operation: Operation::DeployContainer,
@@ -598,6 +602,8 @@ impl State {
         update.logs.push(deploy_log);
         update.status = UpdateStatus::Complete;
         update.end_ts = Some(monitor_timestamp());
+
+        self.update_status_cache(&server).await;
 
         self.update_update(update.clone()).await?;
 
@@ -672,6 +678,8 @@ impl State {
 
         update.end_ts = Some(monitor_timestamp());
         update.status = UpdateStatus::Complete;
+
+        self.update_status_cache(&server).await;
 
         self.update_update(update.clone()).await?;
 
@@ -756,6 +764,8 @@ impl State {
         update.end_ts = Some(monitor_timestamp());
         update.status = UpdateStatus::Complete;
 
+        self.update_status_cache(&server).await;
+
         self.update_update(update.clone()).await?;
 
         Ok(update)
@@ -838,6 +848,8 @@ impl State {
 
         update.end_ts = Some(monitor_timestamp());
         update.status = UpdateStatus::Complete;
+
+        self.update_status_cache(&server).await;
 
         self.update_update(update.clone()).await?;
 

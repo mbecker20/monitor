@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Context;
 use axum::{
     extract::{Path, Query},
@@ -15,8 +13,7 @@ use mungos::mongodb::{
 use serde::{Deserialize, Serialize};
 use types::{
     traits::Permissioned, Deployment, DeploymentActionState, DeploymentWithContainerState,
-    DockerContainerState, DockerContainerStats, Log, Operation, PermissionLevel, Server,
-    TerminationSignal, UpdateStatus,
+    DockerContainerStats, Log, Operation, PermissionLevel, TerminationSignal, UpdateStatus,
 };
 use typeshare::typeshare;
 
@@ -371,27 +368,43 @@ impl State {
         let deployment = self
             .get_deployment_check_permissions(id, user, PermissionLevel::Read)
             .await?;
-        let server = self.db.get_server(&deployment.server_id).await?;
-        let (state, container) = match self.periphery.container_list(&server).await {
-            Ok(containers) => match containers.into_iter().find(|c| c.name == deployment.name) {
-                Some(container) => (container.state, Some(container)),
-                None => (DockerContainerState::NotDeployed, None),
-            },
-            Err(_) => (DockerContainerState::Unknown, None),
-        };
+        let status = self.deployment_status_cache.get(id).await;
         Ok(DeploymentWithContainerState {
             deployment,
-            state,
-            container,
+            state: status.as_ref().map(|s| s.state).unwrap_or_default(),
+            container: status.and_then(|s| s.container.clone()),
         })
     }
+
+    // pub async fn get_deployment_with_container_state(
+    //     &self,
+    //     user: &RequestUser,
+    //     id: &str,
+    // ) -> anyhow::Result<DeploymentWithContainerState> {
+    //     let deployment = self
+    //         .get_deployment_check_permissions(id, user, PermissionLevel::Read)
+    //         .await?;
+    //     let server = self.db.get_server(&deployment.server_id).await?;
+    //     let (state, container) = match self.periphery.container_list(&server).await {
+    //         Ok(containers) => match containers.into_iter().find(|c| c.name == deployment.name) {
+    //             Some(container) => (container.state, Some(container)),
+    //             None => (DockerContainerState::NotDeployed, None),
+    //         },
+    //         Err(_) => (DockerContainerState::Unknown, None),
+    //     };
+    //     Ok(DeploymentWithContainerState {
+    //         deployment,
+    //         state,
+    //         container,
+    //     })
+    // }
 
     async fn list_deployments_with_container_state(
         &self,
         user: &RequestUser,
         query: impl Into<Option<Document>>,
     ) -> anyhow::Result<Vec<DeploymentWithContainerState>> {
-        let deployments: Vec<Deployment> = self
+        let futures = self
             .db
             .deployments
             .get_some(query, None)
@@ -406,47 +419,79 @@ impl State {
                     permissions != PermissionLevel::None
                 }
             })
-            .collect();
-        let mut servers: Vec<Server> = Vec::new();
-        for d in &deployments {
-            if !servers.iter().any(|s| s.id == d.server_id) {
-                servers.push(self.db.get_server(&d.server_id).await?)
-            }
-        }
-        let containers_futures = servers
-            .into_iter()
-            .map(|server| async { (self.periphery.container_list(&server).await, server.id) });
-
-        let containers = join_all(containers_futures)
-            .await
-            .into_iter()
-            .map(|(container, server_id)| (server_id, container.ok()))
-            .collect::<HashMap<_, _>>();
-        let deployments_with_containers = deployments
-            .into_iter()
-            .map(|deployment| {
-                let (state, container) = match containers.get(&deployment.server_id).unwrap() {
-                    Some(container) => {
-                        match container
-                            .iter()
-                            .find(|c| c.name == deployment.name)
-                            .map(|c| c.to_owned())
-                        {
-                            Some(container) => (container.state, Some(container)),
-                            None => (DockerContainerState::NotDeployed, None),
-                        }
-                    }
-                    None => (DockerContainerState::Unknown, None),
-                };
+            .map(|deployment| async move {
+                let status = self.deployment_status_cache.get(&deployment.id).await;
                 DeploymentWithContainerState {
-                    container,
                     deployment,
-                    state,
+                    state: status.as_ref().map(|s| s.state).unwrap_or_default(),
+                    container: status.and_then(|s| s.container.clone()),
                 }
-            })
-            .collect::<Vec<DeploymentWithContainerState>>();
-        Ok(deployments_with_containers)
+            });
+
+        Ok(join_all(futures).await)
     }
+
+    // async fn list_deployments_with_container_state(
+    //     &self,
+    //     user: &RequestUser,
+    //     query: impl Into<Option<Document>>,
+    // ) -> anyhow::Result<Vec<DeploymentWithContainerState>> {
+    //     let deployments: Vec<Deployment> = self
+    //         .db
+    //         .deployments
+    //         .get_some(query, None)
+    //         .await
+    //         .context("failed at get all deployments query")?
+    //         .into_iter()
+    //         .filter(|s| {
+    //             if user.is_admin {
+    //                 true
+    //             } else {
+    //                 let permissions = s.get_user_permissions(&user.id);
+    //                 permissions != PermissionLevel::None
+    //             }
+    //         })
+    //         .collect();
+    //     let mut servers: Vec<Server> = Vec::new();
+    //     for d in &deployments {
+    //         if !servers.iter().any(|s| s.id == d.server_id) {
+    //             servers.push(self.db.get_server(&d.server_id).await?)
+    //         }
+    //     }
+    //     let containers_futures = servers
+    //         .into_iter()
+    //         .map(|server| async { (self.periphery.container_list(&server).await, server.id) });
+
+    //     let containers = join_all(containers_futures)
+    //         .await
+    //         .into_iter()
+    //         .map(|(container, server_id)| (server_id, container.ok()))
+    //         .collect::<HashMap<_, _>>();
+    //     let deployments_with_containers = deployments
+    //         .into_iter()
+    //         .map(|deployment| {
+    //             let (state, container) = match containers.get(&deployment.server_id).unwrap() {
+    //                 Some(container) => {
+    //                     match container
+    //                         .iter()
+    //                         .find(|c| c.name == deployment.name)
+    //                         .map(|c| c.to_owned())
+    //                     {
+    //                         Some(container) => (container.state, Some(container)),
+    //                         None => (DockerContainerState::NotDeployed, None),
+    //                     }
+    //                 }
+    //                 None => (DockerContainerState::Unknown, None),
+    //             };
+    //             DeploymentWithContainerState {
+    //                 container,
+    //                 deployment,
+    //                 state,
+    //             }
+    //         })
+    //         .collect::<Vec<DeploymentWithContainerState>>();
+    //     Ok(deployments_with_containers)
+    // }
 
     async fn get_deployment_action_states(
         &self,

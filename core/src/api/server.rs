@@ -382,15 +382,12 @@ impl State {
         let server = self
             .get_server_check_permissions(id, user, PermissionLevel::Read)
             .await?;
-        let status = if server.enabled {
-            let res = self.periphery.health_check(&server).await;
-            match res {
-                Ok(_) => ServerStatus::Ok,
-                Err(_) => ServerStatus::NotOk,
-            }
-        } else {
-            ServerStatus::Disabled
-        };
+        let status = self
+            .server_status_cache
+            .get(id)
+            .await
+            .map(|s| s.status)
+            .unwrap_or(ServerStatus::NotOk);
         Ok(ServerWithStatus { server, status })
     }
 
@@ -415,16 +412,12 @@ impl State {
                 }
             })
             .map(|server| async {
-                let status = if server.enabled {
-                    let res = self.periphery.health_check(&server).await;
-                    match res {
-                        Ok(_) => ServerStatus::Ok,
-                        Err(_) => ServerStatus::NotOk,
-                    }
-                } else {
-                    ServerStatus::Disabled
-                };
-
+                let status = self
+                    .server_status_cache
+                    .get(&server.id)
+                    .await
+                    .map(|s| s.status)
+                    .unwrap_or(ServerStatus::NotOk);
                 ServerWithStatus { server, status }
             });
         Ok(join_all(futures).await)
@@ -435,13 +428,14 @@ impl State {
         server_id: &str,
         user: &RequestUser,
     ) -> anyhow::Result<String> {
-        let server = self
-            .get_server_check_permissions(server_id, user, PermissionLevel::Read)
+        self.get_server_check_permissions(server_id, user, PermissionLevel::Read)
             .await?;
-        let version = self.periphery.get_version(&server).await.context(format!(
-            "failed to get system information from server {}",
-            server.name
-        ))?;
+        let version = self
+            .server_status_cache
+            .get(server_id)
+            .await
+            .map(|s| s.version.clone())
+            .unwrap_or(String::from("unknown"));
         Ok(version)
     }
 

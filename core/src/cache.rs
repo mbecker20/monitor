@@ -1,7 +1,7 @@
 use async_timing_util::{unix_timestamp_ms, wait_until_timelength, Timelength};
 use futures_util::future::join_all;
 use mungos::mongodb::bson::doc;
-use types::{BasicContainerInfo, DockerContainerState, Server, ServerStatus};
+use types::{BasicContainerInfo, Deployment, DockerContainerState, Server, ServerStatus};
 
 use crate::state::State;
 
@@ -12,20 +12,18 @@ pub struct CachedDeploymentStatus {
     pub container: Option<BasicContainerInfo>,
 }
 
+#[derive(Default)]
 pub struct CachedServerStatus {
     pub id: String,
     pub status: ServerStatus,
+    pub version: String,
 }
 
 impl State {
     pub async fn manage_status_cache(&self) {
         loop {
-            wait_until_timelength(Timelength::FifteenSeconds, 1000).await;
-            let servers = self
-                .db
-                .servers
-                .get_some(doc! { "enabled": true }, None)
-                .await;
+            wait_until_timelength(Timelength::FiveSeconds, 1000).await;
+            let servers = self.db.servers.get_some(None, None).await;
             if let Err(e) = &servers {
                 eprintln!(
                     "{} | failed to get server list (manage status cache) | {e:#?}",
@@ -35,12 +33,12 @@ impl State {
             let servers = servers.unwrap();
             let futures = servers
                 .into_iter()
-                .map(|server| self.update_deployment_status_cache(server));
+                .map(|server| async move { self.update_status_cache(&server).await });
             join_all(futures).await;
         }
     }
 
-    async fn update_deployment_status_cache(&self, server: Server) {
+    pub async fn update_status_cache(&self, server: &Server) {
         let deployments = self
             .db
             .deployments
@@ -51,21 +49,24 @@ impl State {
             return;
         }
         let deployments = deployments.unwrap();
-        let containers = self.periphery.container_list(&server).await;
+        if !server.enabled {
+            self.insert_deployments_status_unknown(deployments).await;
+            self.insert_server_status(server, ServerStatus::Disabled, String::from("unknown"))
+                .await;
+            return;
+        }
+        let version = self.periphery.get_version(server).await;
+        if version.is_err() {
+            self.insert_deployments_status_unknown(deployments).await;
+            self.insert_server_status(server, ServerStatus::NotOk, String::from("unknown"))
+                .await;
+            return;
+        }
+        self.insert_server_status(server, ServerStatus::Ok, version.unwrap())
+            .await;
+        let containers = self.periphery.container_list(server).await;
         if containers.is_err() {
-            for deployment in deployments {
-                self.deployment_status_cache
-                    .insert(
-                        deployment.id.clone(),
-                        CachedDeploymentStatus {
-                            id: deployment.id,
-                            state: DockerContainerState::Unknown,
-                            container: None,
-                        }
-                        .into(),
-                    )
-                    .await;
-            }
+            self.insert_deployments_status_unknown(deployments).await;
             return;
         }
         let containers = containers.unwrap();
@@ -73,7 +74,7 @@ impl State {
             let container = containers
                 .iter()
                 .find(|c| c.name == deployment.name)
-                .map(|c| c.to_owned());
+                .cloned();
             self.deployment_status_cache
                 .insert(
                     deployment.id.clone(),
@@ -89,5 +90,35 @@ impl State {
                 )
                 .await;
         }
+    }
+
+    async fn insert_deployments_status_unknown(&self, deployments: Vec<Deployment>) {
+        for deployment in deployments {
+            self.deployment_status_cache
+                .insert(
+                    deployment.id.clone(),
+                    CachedDeploymentStatus {
+                        id: deployment.id,
+                        state: DockerContainerState::Unknown,
+                        container: None,
+                    }
+                    .into(),
+                )
+                .await;
+        }
+    }
+
+    async fn insert_server_status(&self, server: &Server, status: ServerStatus, version: String) {
+        self.server_status_cache
+            .insert(
+                server.id.clone(),
+                CachedServerStatus {
+                    id: server.id.clone(),
+                    status,
+                    version,
+                }
+                .into(),
+            )
+            .await;
     }
 }

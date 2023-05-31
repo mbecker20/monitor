@@ -260,10 +260,13 @@ pub struct DockerContainerStats {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy)]
+#[derive(
+    Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy, Default,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum DockerContainerState {
+    #[default]
     Unknown,
     NotDeployed,
     Created,
@@ -273,12 +276,6 @@ pub enum DockerContainerState {
     Paused,
     Exited,
     Dead,
-}
-
-impl Default for DockerContainerState {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 #[typeshare]

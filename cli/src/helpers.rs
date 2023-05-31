@@ -3,7 +3,7 @@ use std::{
     fs::{self, File},
     io::{Read, Write},
     net::IpAddr,
-    path::{PathBuf, Path},
+    path::{Path, PathBuf},
     str::FromStr,
 };
 

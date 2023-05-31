@@ -142,11 +142,14 @@ pub struct ServerActionState {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy)]
+#[derive(
+    Serialize, Deserialize, Debug, Display, EnumString, PartialEq, Hash, Eq, Clone, Copy, Default,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum ServerStatus {
     Ok,
+    #[default]
     NotOk,
     Disabled,
 }
