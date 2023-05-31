@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     let term_signal = immediate_term_handle()?;
 
     let app = tokio::spawn(async move {
-        let (config, spa_router, index_html_service) = config::load();
+        let (config, spa_router, index_html_service, port) = config::load();
 
         println!("starting monitor core on port {}...", config.port);
 
@@ -46,9 +46,9 @@ async fn main() -> anyhow::Result<()> {
                     .allow_headers(Any),
             );
 
-        println!("started monitor core on port {}", config.port);
+        println!("started monitor core on port {}", port);
 
-        axum::Server::bind(&get_socket_addr(config.port))
+        axum::Server::bind(&get_socket_addr(port))
             .serve(app.into_make_service())
             .await?;
 
