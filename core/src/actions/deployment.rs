@@ -38,7 +38,8 @@ impl State {
         server_id: String,
         user: &RequestUser,
     ) -> anyhow::Result<Deployment> {
-        self.get_server_check_permissions(&server_id, user, PermissionLevel::Update)
+        let server = self
+            .get_server_check_permissions(&server_id, user, PermissionLevel::Update)
             .await?;
         let start_ts = monitor_timestamp();
 
@@ -69,7 +70,11 @@ impl State {
             success: true,
             ..Default::default()
         };
+
+        self.update_status_cache(&server).await;
+
         self.add_update(update).await?;
+
         Ok(deployment)
     }
 
@@ -152,6 +157,9 @@ impl State {
             ..Default::default()
         };
         self.add_update(update).await?;
+
+        self.deployment_status_cache.remove(deployment_id).await;
+
         Ok(deployment)
     }
 

@@ -67,6 +67,8 @@ impl State {
         };
         self.add_update(update).await?;
 
+        self.update_status_cache(&server).await;
+
         Ok(server)
     }
 
@@ -149,7 +151,7 @@ impl State {
 
         self.update_update(update).await?;
 
-        self.update_status_cache(&server).await;
+        self.server_status_cache.remove(server_id).await;
 
         Ok(server)
     }
@@ -195,6 +197,9 @@ impl State {
         };
 
         self.add_update(update).await?;
+
+        self.update_status_cache(&new_server).await;
+
         Ok(new_server)
     }
 

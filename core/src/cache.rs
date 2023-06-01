@@ -45,7 +45,7 @@ impl State {
             .get_some(doc! { "server_id": &server.id }, None)
             .await;
         if let Err(e) = &deployments {
-            eprintln!("{} | failed to get deployments list from mongo (manage status cache) | server id: {} | {e:#?}", server.id, unix_timestamp_ms());
+            eprintln!("{} | failed to get deployments list from mongo (update status cache) | server id: {} | {e:#?}", server.id, unix_timestamp_ms());
             return;
         }
         let deployments = deployments.unwrap();

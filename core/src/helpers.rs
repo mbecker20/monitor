@@ -107,6 +107,10 @@ impl<T: Clone + Default> Cache<T> {
     pub async fn clear(&self) {
         self.cache.write().await.clear();
     }
+
+    pub async fn remove(&self, key: &str) {
+        self.cache.write().await.remove(key);
+    }
 }
 
 impl<T: Clone + Default + Busy> Cache<T> {
