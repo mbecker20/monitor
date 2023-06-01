@@ -1,7 +1,10 @@
 use async_timing_util::{unix_timestamp_ms, wait_until_timelength, Timelength};
 use futures_util::future::join_all;
 use mungos::mongodb::bson::doc;
-use types::{BasicContainerInfo, Deployment, DockerContainerState, Server, ServerStatus};
+use types::{
+    BasicContainerInfo, Deployment, DockerContainerState, Server, ServerStatus, SystemStats,
+    SystemStatsQuery,
+};
 
 use crate::state::State;
 
@@ -17,12 +20,13 @@ pub struct CachedServerStatus {
     pub id: String,
     pub status: ServerStatus,
     pub version: String,
+    pub stats: Option<SystemStats>,
 }
 
 impl State {
     pub async fn manage_status_cache(&self) {
         loop {
-            wait_until_timelength(Timelength::FiveSeconds, 1000).await;
+            wait_until_timelength(Timelength::FiveSeconds, 500).await;
             let servers = self.db.servers.get_some(None, None).await;
             if let Err(e) = &servers {
                 eprintln!(
@@ -51,19 +55,39 @@ impl State {
         let deployments = deployments.unwrap();
         if !server.enabled {
             self.insert_deployments_status_unknown(deployments).await;
-            self.insert_server_status(server, ServerStatus::Disabled, String::from("unknown"))
-                .await;
+            self.insert_server_status(
+                server,
+                ServerStatus::Disabled,
+                String::from("unknown"),
+                None,
+            )
+            .await;
             return;
         }
         let version = self.periphery.get_version(server).await;
         if version.is_err() {
             self.insert_deployments_status_unknown(deployments).await;
-            self.insert_server_status(server, ServerStatus::NotOk, String::from("unknown"))
+            self.insert_server_status(server, ServerStatus::NotOk, String::from("unknown"), None)
                 .await;
             return;
         }
-        self.insert_server_status(server, ServerStatus::Ok, version.unwrap())
+        let stats = self
+            .periphery
+            .get_system_stats(server, &SystemStatsQuery::all())
             .await;
+        if stats.is_err() {
+            self.insert_deployments_status_unknown(deployments).await;
+            self.insert_server_status(server, ServerStatus::NotOk, String::from("unknown"), None)
+                .await;
+            return;
+        }
+        self.insert_server_status(
+            server,
+            ServerStatus::Ok,
+            version.unwrap(),
+            stats.unwrap().into(),
+        )
+        .await;
         let containers = self.periphery.container_list(server).await;
         if containers.is_err() {
             self.insert_deployments_status_unknown(deployments).await;
@@ -108,7 +132,13 @@ impl State {
         }
     }
 
-    async fn insert_server_status(&self, server: &Server, status: ServerStatus, version: String) {
+    async fn insert_server_status(
+        &self,
+        server: &Server,
+        status: ServerStatus,
+        version: String,
+        stats: Option<SystemStats>,
+    ) {
         self.server_status_cache
             .insert(
                 server.id.clone(),
@@ -116,6 +146,7 @@ impl State {
                     id: server.id.clone(),
                     status,
                     version,
+                    stats,
                 }
                 .into(),
             )

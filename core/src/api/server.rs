@@ -2,9 +2,10 @@ use anyhow::{anyhow, Context};
 use async_timing_util::{get_timelength_in_ms, unix_timestamp_ms};
 use axum::{
     extract::{ws::Message as AxumMessage, Path, Query, WebSocketUpgrade},
+    headers::ContentType,
     response::IntoResponse,
     routing::{delete, get, patch, post},
-    Json, Router,
+    Json, Router, TypedHeader,
 };
 use futures_util::{future::join_all, SinkExt, StreamExt};
 use helpers::handle_anyhow_error;
@@ -19,7 +20,7 @@ use tokio_util::sync::CancellationToken;
 use types::{
     traits::Permissioned, BasicContainerInfo, HistoricalStatsQuery, ImageSummary, Network,
     PermissionLevel, Server, ServerActionState, ServerStatus, ServerWithStatus, SystemInformation,
-    SystemStats, SystemStatsQuery, SystemStatsRecord,
+    SystemStatsQuery, SystemStatsRecord,
 };
 use typeshare::typeshare;
 
@@ -170,12 +171,13 @@ pub fn router() -> Router {
                 |state: StateExtension,
                  user: RequestUserExtension,
                  Path(ServerId { id }),
-                 query: Query<SystemStatsQuery>| async move {
+                //  query: Query<SystemStatsQuery>
+                 | async move {
                     let stats = state
-                        .get_server_stats(&id, &user, &query)
+                        .get_server_stats(&id, &user)
                         .await
                         .map_err(handle_anyhow_error)?;
-                    response!(Json(stats))
+                    response!((TypedHeader(ContentType::json()), stats))
                 },
             ),
         )
@@ -462,16 +464,21 @@ impl State {
         &self,
         server_id: &str,
         user: &RequestUser,
-        query: &SystemStatsQuery,
-    ) -> anyhow::Result<SystemStats> {
-        let server = self
-            .get_server_check_permissions(server_id, user, PermissionLevel::Read)
+        // query: &SystemStatsQuery,
+    ) -> anyhow::Result<String> {
+        self.get_server_check_permissions(server_id, user, PermissionLevel::Read)
             .await?;
-        let stats = self
-            .periphery
-            .get_system_stats(&server, query)
+        let status = self
+            .server_status_cache
+            .get(server_id)
             .await
-            .context(format!("failed to get stats from server {}", server.name))?;
+            .ok_or(anyhow!("did not find stats for server at {server_id}"))?;
+        // let stats = self
+        //     .periphery
+        //     .get_system_stats(&server, query)
+        //     .await
+        //     .context(format!("failed to get stats from server {}", server.name))?;
+        let stats = serde_json::to_string(&status.stats)?;
         Ok(stats)
     }
 

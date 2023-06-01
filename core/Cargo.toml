@@ -14,7 +14,7 @@ axum_oauth2 = { path = "../lib/axum_oauth2" }
 tokio = { version = "1.28", features = ["full"] }
 tokio-tungstenite = { version = "0.19", features=["native-tls"] }
 tokio-util = { version = "0.7"}
-axum = { version = "0.6", features = ["ws", "json"] }
+axum = { version = "0.6", features = ["ws", "json", "headers"] }
 tower = { version = "0.4", features = ["timeout"] }
 tower-http = { version = "0.4", features = ["fs", "cors"] }
 slack = { package = "slack_client_rs", version = "0.0.8" }
