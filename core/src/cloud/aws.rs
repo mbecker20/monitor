@@ -10,7 +10,7 @@ use aws_sdk_ec2::{
     },
     Client,
 };
-use types::Server;
+use monitor_types::Server;
 
 pub async fn create_ec2_client(
     region: String,

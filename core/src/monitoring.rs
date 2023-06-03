@@ -4,9 +4,9 @@ use async_timing_util::{
     unix_timestamp_ms, wait_until_timelength, Timelength, ONE_DAY_MS, ONE_HOUR_MS,
 };
 use futures_util::future::join_all;
+use monitor_types::{Server, SystemStats, SystemStatsQuery, SystemStatsRecord};
 use mungos::mongodb::bson::doc;
 use slack::types::Block;
-use types::{Server, SystemStats, SystemStatsQuery, SystemStatsRecord};
 
 use crate::state::State;
 

@@ -1,9 +1,9 @@
 use axum::Router;
 use dotenv::dotenv;
 use merge_config_files::parse_config_file;
+use monitor_types::CoreConfig;
 use serde::Deserialize;
 use tower_http::services::{ServeDir, ServeFile};
-use types::CoreConfig;
 
 type SpaRouter = Router;
 

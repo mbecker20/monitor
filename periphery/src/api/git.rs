@@ -1,7 +1,7 @@
 use axum::{routing::post, Extension, Json, Router};
-use helpers::{handle_anyhow_error, to_monitor_name};
+use monitor_helpers::{handle_anyhow_error, to_monitor_name};
+use monitor_types::{CloneArgs, Command, Log};
 use serde::Deserialize;
-use types::{CloneArgs, Command, Log};
 
 use crate::{
     helpers::{get_github_token, git},

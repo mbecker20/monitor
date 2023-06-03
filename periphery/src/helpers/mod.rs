@@ -1,6 +1,6 @@
 use anyhow::anyhow;
+use monitor_types::{monitor_timestamp, DockerToken, GithubToken, Log, PeripheryConfig};
 use run_command::{async_run_command, CommandOutput};
-use types::{monitor_timestamp, DockerToken, GithubToken, Log, PeripheryConfig};
 
 pub mod docker;
 pub mod git;

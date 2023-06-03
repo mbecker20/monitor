@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use ::run_command::async_run_command;
 use anyhow::anyhow;
-use helpers::to_monitor_name;
-use types::{monitor_timestamp, CloneArgs, Command, GithubToken, Log};
+use monitor_helpers::to_monitor_name;
+use monitor_types::{monitor_timestamp, CloneArgs, Command, GithubToken, Log};
 
 use super::run_monitor_command;
 

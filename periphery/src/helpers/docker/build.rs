@@ -1,8 +1,8 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::{anyhow, Context};
-use helpers::to_monitor_name;
-use types::{Build, DockerBuildArgs, EnvironmentVar, Log, Version};
+use monitor_helpers::to_monitor_name;
+use monitor_types::{Build, DockerBuildArgs, EnvironmentVar, Log, Version};
 
 use crate::helpers::run_monitor_command;
 

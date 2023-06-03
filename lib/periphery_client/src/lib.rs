@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use anyhow::{anyhow, Context};
+use monitor_types::{Server, SystemInformation, SystemStats, SystemStatsQuery};
 use reqwest::StatusCode;
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
-use types::{Server, SystemInformation, SystemStats, SystemStatsQuery};
 
 mod build;
 mod command;

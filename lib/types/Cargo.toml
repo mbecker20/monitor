@@ -9,13 +9,13 @@ license = "GPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = "1.0"
-bson = "2.6"
-strum = "0.24"
-strum_macros = "0.24"
-diff-struct = "0.5"
-bollard = "0.14.0"
-derive_builder = "0.12"
-typeshare = "1.0.1"
-chrono = "0.4"
-anyhow = "1.0"
+serde.workspace = true
+bson.workspace = true
+strum.workspace = true
+strum_macros.workspace = true
+diff-struct.workspace = true
+bollard.workspace = true
+derive_builder.workspace = true
+typeshare.workspace = true
+chrono.workspace = true
+anyhow.workspace = true

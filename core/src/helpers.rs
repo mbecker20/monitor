@@ -2,9 +2,9 @@ use std::{collections::HashMap, str::FromStr};
 
 use anyhow::anyhow;
 use diff::{Diff, OptionDiff};
-use helpers::to_monitor_name;
+use monitor_helpers::to_monitor_name;
+use monitor_types::{traits::Busy, Build};
 use tokio::sync::RwLock;
-use types::{traits::Busy, Build};
 
 #[macro_export]
 macro_rules! response {

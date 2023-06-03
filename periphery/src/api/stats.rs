@@ -5,11 +5,11 @@ use std::{
 
 use async_timing_util::wait_until_timelength;
 use axum::{extract::Query, routing::get, Extension, Json, Router};
-use sysinfo::{ComponentExt, CpuExt, DiskExt, NetworkExt, PidExt, ProcessExt, SystemExt};
-use types::{
+use monitor_types::{
     DiskUsage, SingleCpuUsage, SingleDiskUsage, SystemComponent, SystemInformation, SystemNetwork,
     SystemProcess, SystemStats, SystemStatsQuery, Timelength,
 };
+use sysinfo::{ComponentExt, CpuExt, DiskExt, NetworkExt, PidExt, ProcessExt, SystemExt};
 
 pub fn router() -> Router {
     Router::new().route(
@@ -257,18 +257,22 @@ impl StatsClient {
     fn get_disk_usage(&self) -> DiskUsage {
         let mut free_gb = 0.0;
         let mut total_gb = 0.0;
-        let mut disks = Vec::new();
-        for disk in self.sys.disks() {
-            let disk_total = disk.total_space() as f64 / BYTES_PER_GB;
-            let disk_free = disk.available_space() as f64 / BYTES_PER_GB;
-            total_gb += disk_total;
-            free_gb += disk_free;
-            disks.push(SingleDiskUsage {
-                mount: disk.mount_point().to_owned(),
-                used_gb: disk_total - disk_free,
-                total_gb: disk_total,
-            });
-        }
+        let disks = self
+            .sys
+            .disks()
+            .iter()
+            .map(|disk| {
+                let disk_total = disk.total_space() as f64 / BYTES_PER_GB;
+                let disk_free = disk.available_space() as f64 / BYTES_PER_GB;
+                total_gb += disk_total;
+                free_gb += disk_free;
+                SingleDiskUsage {
+                    mount: disk.mount_point().to_owned(),
+                    used_gb: disk_total - disk_free,
+                    total_gb: disk_total,
+                }
+            })
+            .collect::<Vec<_>>();
         let used_gb = total_gb - free_gb;
         let mut read_bytes = 0;
         let mut write_bytes = 0;

@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Context};
 use diff::Diff;
 use futures_util::future::join_all;
-use mungos::mongodb::bson::doc;
-use types::{
+use monitor_types::{
     monitor_timestamp, traits::Permissioned, Log, Operation, PermissionLevel, Server, Update,
     UpdateStatus, UpdateTarget,
 };
+use mungos::mongodb::bson::doc;
 
 use crate::{auth::RequestUser, state::State};
 

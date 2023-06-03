@@ -1,7 +1,7 @@
 use anyhow::Context;
 use axum::{routing::post, Json, Router};
-use helpers::handle_anyhow_error;
-use types::Command;
+use monitor_helpers::handle_anyhow_error;
+use monitor_types::Command;
 
 use crate::{helpers::run_monitor_command, HomeDirExtension};
 

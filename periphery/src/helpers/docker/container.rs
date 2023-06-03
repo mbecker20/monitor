@@ -1,12 +1,12 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::{anyhow, Context};
-use helpers::to_monitor_name;
-use run_command::async_run_command;
-use types::{
+use monitor_helpers::to_monitor_name;
+use monitor_types::{
     Conversion, Deployment, DockerContainerStats, DockerRunArgs, EnvironmentVar, Log, RestartMode,
     TerminationSignal,
 };
+use run_command::async_run_command;
 
 use crate::helpers::{docker::parse_extra_args, run_monitor_command};
 

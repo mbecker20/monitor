@@ -1,6 +1,6 @@
 use axum::{extract::Path, Extension, Json};
+use monitor_types::AccountType;
 use serde::Deserialize;
-use types::AccountType;
 
 use crate::PeripheryConfigExtension;
 

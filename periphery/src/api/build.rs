@@ -1,7 +1,7 @@
 use anyhow::Context;
 use axum::{routing::post, Extension, Json, Router};
-use helpers::handle_anyhow_error;
-use types::{Build, Log};
+use monitor_helpers::handle_anyhow_error;
+use monitor_types::{Build, Log};
 
 use crate::{
     helpers::{docker, get_docker_token},

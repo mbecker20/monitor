@@ -1,5 +1,5 @@
 use anyhow::Context;
-use types::Update;
+use monitor_types::Update;
 
 use crate::state::State;
 

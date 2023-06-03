@@ -1,8 +1,8 @@
 use std::{net::SocketAddr, str::FromStr};
 
 use axum::http::StatusCode;
+use monitor_types::Log;
 use rand::{distributions::Alphanumeric, Rng};
-use types::Log;
 
 pub fn get_socket_addr(port: u16) -> SocketAddr {
     SocketAddr::from_str(&format!("0.0.0.0:{}", port)).expect("failed to parse socket addr")

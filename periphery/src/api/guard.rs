@@ -8,8 +8,8 @@ use axum::{
     response::Response,
     Json, RequestExt,
 };
+use monitor_types::{monitor_timestamp, PeripheryConfig};
 use serde_json::Value;
-use types::{monitor_timestamp, PeripheryConfig};
 
 pub async fn guard_request_by_passkey(
     req: Request<Body>,

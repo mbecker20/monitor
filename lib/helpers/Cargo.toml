@@ -9,7 +9,7 @@ license = "GPL-3.0-or-later"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { package = "monitor_types", path = "../types" }
-anyhow = "1.0"
-axum = "0.6"
-rand = "0.8"
+monitor_types.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+rand.workspace = true

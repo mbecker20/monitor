@@ -1,6 +1,6 @@
 use anyhow::Context;
+use monitor_types::{Log, Network, Server};
 use serde_json::json;
-use types::{Log, Network, Server};
 
 use crate::PeripheryClient;
 

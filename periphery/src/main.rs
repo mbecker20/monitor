@@ -2,9 +2,9 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
-use ::helpers::get_socket_addr;
 use axum::Extension;
-use types::PeripheryConfig;
+use monitor_helpers::get_socket_addr;
+use monitor_types::PeripheryConfig;
 
 mod api;
 mod config;

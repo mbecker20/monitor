@@ -1,6 +1,8 @@
 use anyhow::Context;
+use monitor_types::{
+    BasicContainerInfo, Deployment, DockerContainerStats, Log, Server, TerminationSignal,
+};
 use serde_json::json;
-use types::{BasicContainerInfo, Deployment, DockerContainerStats, Log, Server, TerminationSignal};
 
 use crate::PeripheryClient;
 

@@ -5,7 +5,7 @@ use collections::{
     updates_collection, users_collection,
 };
 use mungos::{Collection, Mungos};
-use types::{
+use monitor_types::{
     Action, Build, Deployment, Group, MongoConfig, PeripheryCommand, PermissionLevel, Procedure,
     Server, SystemStatsRecord, Update, User,
 };

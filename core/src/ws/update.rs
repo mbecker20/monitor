@@ -3,8 +3,9 @@ use axum::{
     extract::{ws::Message, WebSocketUpgrade},
     response::IntoResponse,
 };
-use db::DbClient;
+use db_client::DbClient;
 use futures_util::{SinkExt, StreamExt};
+use monitor_types::{PermissionLevel, Update, UpdateTarget, User};
 use serde_json::json;
 use tokio::{
     select,
@@ -14,7 +15,6 @@ use tokio::{
     },
 };
 use tokio_util::sync::CancellationToken;
-use types::{PermissionLevel, Update, UpdateTarget, User};
 
 use crate::{auth::JwtExtension, state::StateExtension};
 

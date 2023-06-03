@@ -4,12 +4,12 @@ use anyhow::{anyhow, Context};
 use aws_sdk_ec2::Client;
 use diff::Diff;
 use futures_util::future::join_all;
-use helpers::{all_logs_success, to_monitor_name};
-use mungos::mongodb::bson::{doc, to_bson};
-use types::{
+use monitor_helpers::{all_logs_success, to_monitor_name};
+use monitor_types::{
     monitor_timestamp, traits::Permissioned, AwsBuilderBuildConfig, Build, DockerContainerState,
     Log, Operation, PermissionLevel, Update, UpdateStatus, UpdateTarget, Version,
 };
+use mungos::mongodb::bson::{doc, to_bson};
 
 use crate::{
     auth::RequestUser,

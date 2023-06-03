@@ -1,4 +1,4 @@
-use types::Log;
+use monitor_types::Log;
 
 use crate::helpers::run_monitor_command;
 

@@ -1,5 +1,5 @@
 use anyhow::Context;
-use types::{Command, Log, Server};
+use monitor_types::{Command, Log, Server};
 
 use crate::PeripheryClient;
 

@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use diff::Diff;
-use helpers::all_logs_success;
-use types::{
+use monitor_helpers::all_logs_success;
+use monitor_types::{
     monitor_timestamp, traits::Permissioned, Log, Operation, PeripheryCommand,
     PeripheryCommandBuilder, PermissionLevel, Update, UpdateStatus, UpdateTarget,
 };

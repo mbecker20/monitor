@@ -1,5 +1,5 @@
 use anyhow::Context;
-use types::{Build, Log, Server, PERIPHERY_BUILDER_BUSY};
+use monitor_types::{Build, Log, Server, PERIPHERY_BUILDER_BUSY};
 
 use crate::PeripheryClient;
 

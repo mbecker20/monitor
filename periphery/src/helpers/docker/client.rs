@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::anyhow;
 use axum::Extension;
 use bollard::{container::ListContainersOptions, Docker};
-use types::{BasicContainerInfo, ImageSummary, Network};
+use monitor_types::{BasicContainerInfo, ImageSummary, Network};
 
 pub use bollard::container::Stats;
 

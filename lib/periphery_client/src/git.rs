@@ -1,6 +1,6 @@
 use anyhow::Context;
+use monitor_types::{CloneArgs, Command, Log, Server};
 use serde_json::json;
-use types::{CloneArgs, Command, Log, Server};
 
 use crate::PeripheryClient;
 

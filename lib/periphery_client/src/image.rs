@@ -1,5 +1,5 @@
 use anyhow::Context;
-use types::{ImageSummary, Log, Server};
+use monitor_types::{ImageSummary, Log, Server};
 
 use crate::PeripheryClient;
 

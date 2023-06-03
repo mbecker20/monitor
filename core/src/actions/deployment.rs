@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Context};
 use diff::Diff;
-use helpers::{all_logs_success, to_monitor_name};
-use mungos::mongodb::bson::doc;
-use types::{
+use monitor_helpers::{all_logs_success, to_monitor_name};
+use monitor_types::{
     monitor_timestamp, traits::Permissioned, Deployment, DeploymentBuilder,
     DeploymentWithContainerState, DockerContainerState, Log, Operation, PermissionLevel,
     ServerStatus, ServerWithStatus, TerminationSignal, Update, UpdateStatus, UpdateTarget,
 };
+use mungos::mongodb::bson::doc;
 
 use crate::{
     auth::RequestUser,

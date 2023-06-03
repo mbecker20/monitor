@@ -1,6 +1,6 @@
 use anyhow::Context;
 use mungos::{Collection, Mungos};
-use types::{
+use monitor_types::{
     Action, Build, Deployment, Group, PeripheryCommand, Procedure, Server, SystemStatsRecord,
     Update, User,
 };

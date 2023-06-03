@@ -1,10 +1,10 @@
 use async_timing_util::{unix_timestamp_ms, wait_until_timelength, Timelength};
 use futures_util::future::join_all;
-use mungos::mongodb::bson::doc;
-use types::{
+use monitor_types::{
     BasicContainerInfo, Deployment, DockerContainerState, Server, ServerStatus, SystemStats,
     SystemStatsQuery,
 };
+use mungos::mongodb::bson::doc;
 
 use crate::state::State;
 

@@ -4,9 +4,9 @@ use axum::Extension;
 use clap::Parser;
 use dotenv::dotenv;
 use merge_config_files::parse_config_paths;
+use monitor_types::PeripheryConfig;
 use parse_csl::parse_comma_seperated;
 use serde::Deserialize;
-use types::PeripheryConfig;
 
 use crate::{HomeDirExtension, PeripheryConfigExtension};
 

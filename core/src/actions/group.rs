@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use diff::Diff;
-use helpers::to_monitor_name;
-use types::{
+use monitor_helpers::to_monitor_name;
+use monitor_types::{
     monitor_timestamp, traits::Permissioned, Group, Log, Operation, PermissionLevel, Update,
     UpdateStatus, UpdateTarget,
 };
