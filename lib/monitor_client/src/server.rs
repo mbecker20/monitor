@@ -264,4 +264,19 @@ impl MonitorClient {
                 "failed to prune containers on server id {server_id}"
             ))
     }
+
+    pub async fn stop_all_containers(
+        &self,
+        server_id: &str,
+        exclude: &[String],
+    ) -> anyhow::Result<Update> {
+        self.post(
+            &format!("/api/server/{server_id}/containers/stop_all"),
+            json!({ "exclude": exclude }),
+        )
+        .await
+        .context(format!(
+            "failed to stop all containers on server id {server_id}"
+        ))
+    }
 }

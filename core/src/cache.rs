@@ -17,7 +17,7 @@ pub struct CachedDeploymentStatus {
 
 #[derive(Default)]
 pub struct CachedServerStatus {
-    pub id: String,
+    pub server: Server,
     pub status: ServerStatus,
     pub version: String,
     pub stats: Option<SystemStats>,
@@ -143,7 +143,7 @@ impl State {
             .insert(
                 server.id.clone(),
                 CachedServerStatus {
-                    id: server.id.clone(),
+                    server: server.clone(),
                     status,
                     version,
                     stats,

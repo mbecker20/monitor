@@ -3,8 +3,7 @@ use std::{cmp::Ordering, collections::HashMap, path::PathBuf};
 use async_timing_util::{
     unix_timestamp_ms, wait_until_timelength, Timelength, ONE_DAY_MS, ONE_HOUR_MS,
 };
-use futures_util::future::join_all;
-use monitor_types::{Server, SystemStats, SystemStatsQuery, SystemStatsRecord};
+use monitor_types::{Server, ServerStatus, SystemStats, SystemStatsRecord};
 use mungos::mongodb::bson::doc;
 use slack::types::Block;
 
@@ -20,37 +19,39 @@ pub struct AlertStatus {
 
 impl State {
     pub async fn collect_server_stats(&self) {
+        let timelength: async_timing_util::Timelength =
+            self.config.monitoring_interval.to_string().parse().unwrap();
         loop {
-            let ts = wait_until_timelength(
-                self.config.monitoring_interval.to_string().parse().unwrap(),
-                0,
-            )
-            .await as i64;
-            let servers = self.get_enabled_servers_with_stats().await;
-            if let Err(e) = servers {
-                eprintln!("failed to get server list from db: {e:?}");
-                continue;
-            }
-            for (server, res) in servers.unwrap() {
-                if res.is_err() {
-                    if let Some(slack) = &self.slack {
-                        let (header, info) = generate_unreachable_message(&server);
-                        let res = slack.send_message_with_header(&header, info.clone()).await;
+            let ts = wait_until_timelength(timelength, 0).await as i64;
+            let server_stats = self.server_status_cache.get_list().await;
+            for server_stats in server_stats {
+                match (server_stats.status, &server_stats.stats) {
+                    (ServerStatus::Ok, Some(stats)) => {
+                        self.check_server_stats(&server_stats.server, stats).await;
+                        let res = self
+                            .db
+                            .stats
+                            .create_one(SystemStatsRecord::from_stats(
+                                server_stats.server.id.clone(),
+                                ts,
+                                stats.clone(),
+                            ))
+                            .await;
                         if let Err(e) = res {
-                            eprintln!("failed to send message to slack: {e} | header: {header} | info: {info:?}")
+                            eprintln!("failed to insert stats into mongo | {e}");
                         }
                     }
-                    continue;
-                }
-                let stats = res.unwrap();
-                self.check_server_stats(&server, &stats).await;
-                let res = self
-                    .db
-                    .stats
-                    .create_one(SystemStatsRecord::from_stats(server.id, ts, stats))
-                    .await;
-                if let Err(e) = res {
-                    eprintln!("failed to insert stats into mongo | {e}");
+                    (ServerStatus::NotOk, _) => {
+                        if let Some(slack) = &self.slack {
+                            let (header, info) = generate_unreachable_message(&server_stats.server);
+                            let res = slack.send_message_with_header(&header, info.clone()).await;
+                            if let Err(e) = res {
+                                eprintln!("failed to send message to slack: {e} | header: {header} | info: {info:?}")
+                            }
+                        }
+                        continue;
+                    }
+                    _ => {}
                 }
             }
         }
@@ -70,26 +71,6 @@ impl State {
                 eprintln!("{ts} | failed to delete old stats | {e:?}");
             }
         }
-    }
-
-    async fn get_enabled_servers_with_stats(
-        &self,
-    ) -> anyhow::Result<Vec<(Server, anyhow::Result<SystemStats>)>> {
-        let servers = self
-            .db
-            .servers
-            .get_some(doc! { "enabled": true }, None)
-            .await?;
-
-        let futures = servers.into_iter().map(|server| async move {
-            let stats = self
-                .periphery
-                .get_system_stats(&server, &SystemStatsQuery::all())
-                .await;
-            (server, stats)
-        });
-
-        Ok(join_all(futures).await)
     }
 
     async fn check_server_stats(&self, server: &Server, stats: &SystemStats) {
@@ -412,43 +393,40 @@ impl State {
         let offset = self.config.daily_offset_hours as u128 * ONE_HOUR_MS;
         loop {
             wait_until_timelength(Timelength::OneDay, offset).await;
-            let servers = self.get_enabled_servers_with_stats().await;
-            if let Err(e) = &servers {
-                eprintln!(
-                    "{} | failed to get servers with stats for daily update | {e:#?}",
-                    unix_timestamp_ms()
-                );
-                continue;
-            }
-            let servers = servers.unwrap();
-            if servers.is_empty() {
+            let server_stats = self.server_status_cache.get_list().await;
+            if server_stats.is_empty() {
                 continue;
             }
             let mut blocks = vec![Block::header("INFO | daily update"), Block::divider()];
-            for (server, stats) in servers {
-                let region = if let Some(region) = &server.region {
+            for server_stats in server_stats
+                .into_iter()
+                .filter(|s| s.status != ServerStatus::Disabled)
+            {
+                let region = if let Some(region) = &server_stats.server.region {
                     format!(" | {region}")
                 } else {
                     String::new()
                 };
-                if let Ok(stats) = stats {
-                    let cpu_warning = if stats.cpu_perc > server.cpu_alert {
+                if let Some(stats) = &server_stats.stats {
+                    let cpu_warning = if stats.cpu_perc > server_stats.server.cpu_alert {
                         " 🚨"
                     } else {
                         ""
                     };
-                    let mem_warning =
-                        if (stats.mem_used_gb / stats.mem_total_gb) * 100.0 > server.mem_alert {
-                            " 🚨"
-                        } else {
-                            ""
-                        };
-                    let disk_warning =
-                        if (stats.disk.used_gb / stats.disk.total_gb) * 100.0 > server.disk_alert {
-                            " 🚨"
-                        } else {
-                            ""
-                        };
+                    let mem_warning = if (stats.mem_used_gb / stats.mem_total_gb) * 100.0
+                        > server_stats.server.mem_alert
+                    {
+                        " 🚨"
+                    } else {
+                        ""
+                    };
+                    let disk_warning = if (stats.disk.used_gb / stats.disk.total_gb) * 100.0
+                        > server_stats.server.disk_alert
+                    {
+                        " 🚨"
+                    } else {
+                        ""
+                    };
                     let status = if !cpu_warning.is_empty()
                         || !mem_warning.is_empty()
                         || !disk_warning.is_empty()
@@ -457,7 +435,7 @@ impl State {
                     } else {
                         "*OK* ✅"
                     };
-                    let name_line = format!("*{}*{region} | {status}", server.name);
+                    let name_line = format!("*{}*{region} | {status}", server_stats.server.name);
                     let cpu_line = format!("CPU: *{:.1}%*{cpu_warning}", stats.cpu_perc);
                     let mem_line = format!(
                         "MEM: *{:.1}%* ({:.2} GB of {:.2} GB){mem_warning}",
@@ -477,7 +455,7 @@ impl State {
                 } else {
                     blocks.push(Block::section(format!(
                         "*{}*{region} | *UNREACHABLE* ❌",
-                        server.name
+                        server_stats.server.name
                     )));
                 }
                 blocks.push(Block::divider())

@@ -139,6 +139,7 @@ pub struct ServerActionState {
     pub pruning_networks: bool,
     pub pruning_containers: bool,
     pub pruning_images: bool,
+    pub stopping_all_containers: bool,
 }
 
 #[typeshare]

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context};
 use diff::Diff;
 use futures_util::future::join_all;
+use monitor_helpers::all_logs_success;
 use monitor_types::{
     monitor_timestamp, traits::Permissioned, Log, Operation, PermissionLevel, Server, Update,
     UpdateStatus, UpdateTarget,
@@ -397,6 +398,112 @@ impl State {
         update.status = UpdateStatus::Complete;
         update.end_ts = Some(monitor_timestamp());
         update.logs.push(log);
+
+        self.update_update(update.clone()).await?;
+
+        Ok(update)
+    }
+
+    pub async fn stop_all_containers(
+        &self,
+        server_id: &str,
+        exclude: &[String],
+        user: &RequestUser,
+    ) -> anyhow::Result<Update> {
+        if self.action_states.server.busy(server_id).await {
+            return Err(anyhow!("server busy"));
+        }
+        self.action_states
+            .server
+            .update_entry(server_id.to_string(), |entry| {
+                entry.stopping_all_containers = true;
+            })
+            .await;
+
+        let res = self
+            .stop_all_containers_inner(server_id, exclude, user)
+            .await;
+
+        self.action_states
+            .server
+            .update_entry(server_id.to_string(), |entry| {
+                entry.stopping_all_containers = false;
+            })
+            .await;
+        
+        res
+    }
+
+    async fn stop_all_containers_inner(
+        &self,
+        server_id: &str,
+        exclude: &[String],
+        user: &RequestUser,
+    ) -> anyhow::Result<Update> {
+        let server = self
+            .get_server_check_permissions(server_id, user, PermissionLevel::Execute)
+            .await?;
+        let start_ts = monitor_timestamp();
+        let mut update = Update {
+            target: UpdateTarget::Server(server.id),
+            operation: Operation::StopAllContainers,
+            start_ts,
+            status: UpdateStatus::InProgress,
+            success: true,
+            operator: user.id.clone(),
+            ..Default::default()
+        };
+        update.id = self.add_update(update.clone()).await?;
+
+        let futures = self
+            .db
+            .deployments
+            .get_some(doc! { "server_id": server_id }, None)
+            .await
+            .context("failed to get servers deployments from db")?
+            .into_iter()
+            .filter(|d| !exclude.contains(&d.id))
+            .map(|d| async move {
+                (
+                    d.name.clone(),
+                    self.stop_container(
+                        &d.id,
+                        &RequestUser {
+                            id: "auto stop".to_string(),
+                            is_admin: true,
+                            ..Default::default()
+                        },
+                        None,
+                        None,
+                    )
+                    .await,
+                )
+            });
+
+        let results = join_all(futures).await;
+
+        let message = results
+            .into_iter()
+            .map(|(name, res)| match res {
+                Ok(update) => {
+                    if update.success {
+                        format!("successfully stopped {name} ✅")
+                    } else {
+                        format!("failed to stop {name} 🚨")
+                    }
+                }
+                Err(e) => format!("failed to stop {name} 🚨 | {e}"),
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        update
+            .logs
+            .push(Log::simple("stop all containers", message));
+
+        update.success = all_logs_success(&update.logs);
+        update.status = UpdateStatus::Complete;
+        update.end_ts = Some(monitor_timestamp());
 
         self.update_update(update.clone()).await?;
 

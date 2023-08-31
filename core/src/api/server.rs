@@ -51,6 +51,13 @@ pub struct CreateServerBody {
     address: String,
 }
 
+#[typeshare]
+#[derive(Deserialize)]
+pub struct StopAllContainersBody {
+    #[serde(default)]
+    exclude: Vec<String>,
+}
+
 pub fn router() -> Router {
     Router::new()
         .route(
@@ -307,13 +314,30 @@ pub fn router() -> Router {
                 |state: StateExtension,
                  user: RequestUserExtension,
                  Path(ServerId { id })| async move {
-                    let stats = spawn_request_action(async move {
+                    let update = spawn_request_action(async move {
                         state
                         .prune_containers(&id, &user)
                         .await
                         .map_err(handle_anyhow_error)
                     }).await??;
-                    response!(Json(stats))
+                    response!(Json(update))
+                },
+            ),
+        )
+        .route(
+            "/:id/containers/stop_all",
+            post(
+                |state: StateExtension,
+                 user: RequestUserExtension,
+                 Path(ServerId { id }),
+                 Json(StopAllContainersBody { exclude })| async move {
+                    let update = spawn_request_action(async move {
+                        state
+                        .stop_all_containers(&id, &exclude, &user)
+                        .await
+                        .map_err(handle_anyhow_error)
+                    }).await??;
+                    response!(Json(update))
                 },
             ),
         )

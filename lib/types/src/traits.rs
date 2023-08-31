@@ -53,7 +53,10 @@ pub trait Busy {
 
 impl Busy for ServerActionState {
     fn busy(&self) -> bool {
-        self.pruning_containers || self.pruning_images || self.pruning_networks
+        self.pruning_containers
+            || self.pruning_images
+            || self.pruning_networks
+            || self.stopping_all_containers
     }
 }
 

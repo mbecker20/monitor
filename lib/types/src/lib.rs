@@ -117,6 +117,7 @@ pub enum Operation {
     PruneContainersServer,
     PruneNetworksServer,
     RenameServer,
+    StopAllContainers,
 
     // build
     CreateBuild,

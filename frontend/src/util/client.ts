@@ -45,6 +45,7 @@ import {
   ModifyUserCreateServerBody,
   ModifyUserEnabledBody,
   PermissionsUpdateBody,
+  StopAllContainersBody,
   StopContainerQuery,
   UpdateDescriptionBody,
 } from "./client_types";
@@ -397,7 +398,7 @@ export class Client {
     return this.get(`/api/server/${server_id}/images`);
   }
 
-  prune_docker_images(server_id: string): Promise<Log> {
+  prune_docker_images(server_id: string): Promise<Update> {
     return this.post(`/api/server/${server_id}/images/prune`);
   }
 
@@ -405,8 +406,12 @@ export class Client {
     return this.get(`/api/server/${server_id}/containers`);
   }
 
-  prune_docker_containers(server_id: string): Promise<Log> {
+  prune_docker_containers(server_id: string): Promise<Update> {
     return this.post(`/api/server/${server_id}/containers/prune`);
+  }
+
+  stop_all_containers(server_id: string, body: StopAllContainersBody): Promise<Update> {
+    return this.post(`/api/server/${server_id}/containers/stop_all`, body);
   }
 
   // build
