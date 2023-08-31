@@ -194,7 +194,7 @@ impl State {
                     .await?;
                 self.db
                     .builds
-                    .update_one::<()>(id, mungos::Update::Set(doc! { "description": description }))
+                    .update_one(id, mungos::Update::Set(doc! { "description": description }))
                     .await?;
             }
             UpdateTarget::Deployment(id) => {
@@ -202,7 +202,7 @@ impl State {
                     .await?;
                 self.db
                     .deployments
-                    .update_one::<()>(id, mungos::Update::Set(doc! { "description": description }))
+                    .update_one(id, mungos::Update::Set(doc! { "description": description }))
                     .await?;
             }
             UpdateTarget::Server(id) => {
@@ -210,7 +210,7 @@ impl State {
                     .await?;
                 self.db
                     .servers
-                    .update_one::<()>(id, mungos::Update::Set(doc! { "description": description }))
+                    .update_one(id, mungos::Update::Set(doc! { "description": description }))
                     .await?;
             }
             UpdateTarget::Group(id) => {
@@ -218,7 +218,7 @@ impl State {
                     .await?;
                 self.db
                     .groups
-                    .update_one::<()>(id, mungos::Update::Set(doc! { "description": description }))
+                    .update_one(id, mungos::Update::Set(doc! { "description": description }))
                     .await?;
             }
             UpdateTarget::Procedure(id) => {
@@ -226,7 +226,7 @@ impl State {
                     .await?;
                 self.db
                     .procedures
-                    .update_one::<()>(id, mungos::Update::Set(doc! { "description": description }))
+                    .update_one(id, mungos::Update::Set(doc! { "description": description }))
                     .await?;
             }
             _ => return Err(anyhow!("invalid target: {target:?}")),

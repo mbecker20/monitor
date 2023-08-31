@@ -396,7 +396,7 @@ impl State {
                 let end_ts =
                     unix_from_monitor_ts(&end_ts).context("failed to parse update end_ts")?;
                 let day = start_ts - start_ts % ONE_DAY_MS;
-                let mut entry = days.entry(day).or_default();
+                let entry = days.entry(day).or_default();
                 entry.count += 1.0;
                 entry.time += ms_to_hour(end_ts - start_ts);
             }

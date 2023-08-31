@@ -7,7 +7,7 @@ use axum::{
 use monitor_helpers::{generate_secret, handle_anyhow_error};
 use monitor_types::{monitor_timestamp, ApiSecret};
 use mungos::{
-    mongodb::bson::{doc, to_bson, Document},
+    mongodb::bson::{doc, to_bson},
     Update,
 };
 use serde::{Deserialize, Serialize};
@@ -79,7 +79,7 @@ async fn create(
     state
         .db
         .users
-        .update_one::<Document>(
+        .update_one(
             &req_user.id,
             Update::Custom(doc! {
                 "$push": {
@@ -100,7 +100,7 @@ async fn delete_one(
     state
         .db
         .users
-        .update_one::<Document>(
+        .update_one(
             &user.id,
             Update::Custom(doc! {
                 "$pull": {

@@ -113,7 +113,7 @@ impl State {
 
         self.db
             .groups
-            .update_one(&new_group.id, mungos::Update::Regular(new_group.clone()))
+            .update_one(&new_group.id, mungos::Update::Regular(&new_group))
             .await
             .context("failed at update one group")?;
 

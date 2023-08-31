@@ -139,7 +139,7 @@ impl State {
             .commands
             .update_one(
                 &new_command.id,
-                mungos::Update::Regular(new_command.clone()),
+                mungos::Update::Regular(&new_command),
             )
             .await
             .context("failed at update one command")?;

@@ -177,7 +177,7 @@ impl State {
 
         self.db
             .servers
-            .update_one(&new_server.id, mungos::Update::Regular(new_server.clone()))
+            .update_one(&new_server.id, mungos::Update::Regular(&new_server))
             .await
             .context("failed at update one server")?;
 

@@ -198,7 +198,7 @@ impl State {
 
         self.db
             .builds
-            .update_one(&new_build.id, mungos::Update::Regular(new_build.clone()))
+            .update_one(&new_build.id, mungos::Update::Regular(&new_build))
             .await
             .context("failed at update one build")?;
 
@@ -383,7 +383,7 @@ impl State {
                     let _ = self
                         .db
                         .builds
-                        .update_one::<Build>(
+                        .update_one(
                             build_id,
                             mungos::Update::Set(doc! {
                                 "version": to_bson(&build.version)

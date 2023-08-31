@@ -2,10 +2,10 @@ use anyhow::{anyhow, Context};
 use axum::{routing::post, Extension, Json, Router};
 use monitor_helpers::handle_anyhow_error;
 use monitor_types::{
-    monitor_timestamp, Build, Deployment, Group, Log, Operation, PermissionLevel,
-    PermissionsTarget, Procedure, Server, Update, UpdateStatus, UpdateTarget,
+    monitor_timestamp, Log, Operation, PermissionLevel, PermissionsTarget, Update, UpdateStatus,
+    UpdateTarget,
 };
-use mungos::mongodb::bson::{doc, Document};
+use mungos::mongodb::bson::doc;
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
@@ -127,7 +127,7 @@ async fn update_permissions(
             state
                 .db
                 .servers
-                .update_one::<Server>(
+                .update_one(
                     &permission_update.target_id,
                     mungos::Update::Set(doc! {
                         format!("permissions.{}", permission_update.user_id): permission_update.permission.to_string()
@@ -154,7 +154,7 @@ async fn update_permissions(
             state
                 .db
                 .deployments
-                .update_one::<Deployment>(
+                .update_one(
                     &permission_update.target_id,
                     mungos::Update::Set(doc! {
                         format!("permissions.{}", permission_update.user_id): permission_update.permission.to_string()
@@ -181,7 +181,7 @@ async fn update_permissions(
             state
                 .db
                 .builds
-                .update_one::<Build>(
+                .update_one(
                     &permission_update.target_id,
                     mungos::Update::Set(doc! {
                         format!("permissions.{}", permission_update.user_id): permission_update.permission.to_string()
@@ -208,7 +208,7 @@ async fn update_permissions(
             state
                 .db
                 .procedures
-                .update_one::<Procedure>(
+                .update_one(
                     &permission_update.target_id,
                     mungos::Update::Set(doc! {
                         format!("permissions.{}", permission_update.user_id): permission_update.permission.to_string()
@@ -235,7 +235,7 @@ async fn update_permissions(
             state
                 .db
                 .groups
-                .update_one::<Group>(
+                .update_one(
                     &permission_update.target_id,
                     mungos::Update::Set(doc! {
                         format!("permissions.{}", permission_update.user_id): permission_update.permission.to_string()
@@ -277,7 +277,7 @@ async fn modify_user_enabled(
     state
         .db
         .users
-        .update_one::<Document>(&user_id, mungos::Update::Set(doc! { "enabled": enabled }))
+        .update_one(&user_id, mungos::Update::Set(doc! { "enabled": enabled }))
         .await?;
     let update_type = if enabled { "enabled" } else { "disabled" };
     let ts = monitor_timestamp();
@@ -322,7 +322,7 @@ async fn modify_user_create_server_permissions(
     state
         .db
         .users
-        .update_one::<Document>(
+        .update_one(
             &user_id,
             mungos::Update::Set(doc! { "create_server_permissions": create_server_permissions }),
         )
@@ -377,7 +377,7 @@ async fn modify_user_create_build_permissions(
     state
         .db
         .users
-        .update_one::<Document>(
+        .update_one(
             &user_id,
             mungos::Update::Set(doc! { "create_build_permissions": create_build_permissions }),
         )

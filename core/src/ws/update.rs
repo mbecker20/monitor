@@ -70,10 +70,7 @@ pub async fn ws_handler(
                 }
                 let user = user.unwrap().unwrap(); // already handle cases where this panics in the above early return
                 let res = user_can_see_update(&user, &user.id, &update.target, &state.db).await;
-                if let Err(_e) = res {
-                    // handle
-                    return;
-                } else {
+                if res.is_ok() {
                     let _ = ws_sender
                         .send(Message::Text(serde_json::to_string(&update).unwrap()))
                         .await;

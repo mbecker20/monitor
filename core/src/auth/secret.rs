@@ -3,10 +3,7 @@ use async_timing_util::unix_timestamp_ms;
 use axum::{routing::post, Extension, Json, Router};
 use monitor_helpers::handle_anyhow_error;
 use monitor_types::unix_from_monitor_ts;
-use mungos::{
-    mongodb::bson::{doc, Document},
-    Update,
-};
+use mungos::{mongodb::bson::doc, Update};
 use serde::Deserialize;
 
 use crate::state::StateExtension;
@@ -46,7 +43,7 @@ pub async fn login(
                 state
                     .db
                     .users
-                    .update_one::<Document>(
+                    .update_one(
                         &user.id,
                         Update::Custom(doc! { "$pull": { "secrets": { "name": s.name } } }),
                     )

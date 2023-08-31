@@ -154,7 +154,7 @@ impl State {
             .procedures
             .update_one(
                 &new_procedure.id,
-                mungos::Update::Regular(new_procedure.clone()),
+                mungos::Update::Regular(&new_procedure),
             )
             .await
             .context("failed at update one procedure")?;

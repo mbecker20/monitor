@@ -232,7 +232,7 @@ impl State {
             .deployments
             .update_one(
                 &new_deployment.id,
-                mungos::Update::Regular(new_deployment.clone()),
+                mungos::Update::Regular(&new_deployment),
             )
             .await
             .context("failed at update one deployment")?;
@@ -409,7 +409,7 @@ impl State {
             .deployments
             .update_one(
                 deployment_id,
-                mungos::Update::<()>::Set(
+                mungos::Update::Set(
                     doc! { "name": to_monitor_name(new_name), "updated_at": monitor_timestamp() },
                 ),
             )
