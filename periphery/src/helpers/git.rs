@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use ::run_command::async_run_command;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use monitor_helpers::to_monitor_name;
 use monitor_types::{monitor_timestamp, CloneArgs, Command, GithubToken, Log};
 
@@ -54,7 +54,11 @@ pub async fn clone_repo(
     repo_dir.push(name);
     let destination = repo_dir.display().to_string();
     let clone_log = clone(repo, &destination, &branch, access_token).await;
-    let mut logs = vec![clone_log];
+    if !clone_log.success {
+        return Ok(vec![clone_log]);
+    }
+    let commit_hash_log = get_commit_hash_log(&destination).await?;
+    let mut logs = vec![clone_log, commit_hash_log];
     if let Some(command) = on_clone {
         if !command.path.is_empty() && !command.command.is_empty() {
             let on_clone_path = repo_dir.join(&command.path);
@@ -118,4 +122,26 @@ async fn clone(
         start_ts,
         end_ts: monitor_timestamp(),
     }
+}
+
+async fn get_commit_hash_log(repo_dir: &str) -> anyhow::Result<Log> {
+    let start_ts = monitor_timestamp();
+    let command = format!("cd {repo_dir} && git rev-parse --short HEAD && git rev-parse HEAD && git log -1 --pretty=%B");
+    let output = async_run_command(&command).await;
+    let mut split = output.stdout.split('\n');
+    let (short, long, msg) = (
+        split.next().context("failed to get short commit hash")?,
+        split.next().context("failed to get long commit hash")?,
+        split.next().context("failed to get commit message")?,
+    );
+    let log = Log {
+        stage: "commit".into(),
+        command,
+        stdout: format!("{short}: {msg}\n\nfull hash: {long}"),
+        stderr: String::new(),
+        success: true,
+        start_ts,
+        end_ts: monitor_timestamp(),
+    };
+    Ok(log)
 }
