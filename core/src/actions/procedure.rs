@@ -152,10 +152,7 @@ impl State {
 
         self.db
             .procedures
-            .update_one(
-                &new_procedure.id,
-                mungos::Update::Regular(&new_procedure),
-            )
+            .update_one(&new_procedure.id, mungos::Update::Regular(&new_procedure))
             .await
             .context("failed at update one procedure")?;
 

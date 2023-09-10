@@ -137,10 +137,7 @@ impl State {
 
         self.db
             .commands
-            .update_one(
-                &new_command.id,
-                mungos::Update::Regular(&new_command),
-            )
+            .update_one(&new_command.id, mungos::Update::Regular(&new_command))
             .await
             .context("failed at update one command")?;
 

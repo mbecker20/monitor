@@ -230,10 +230,7 @@ impl State {
 
         self.db
             .deployments
-            .update_one(
-                &new_deployment.id,
-                mungos::Update::Regular(&new_deployment),
-            )
+            .update_one(&new_deployment.id, mungos::Update::Regular(&new_deployment))
             .await
             .context("failed at update one deployment")?;
 

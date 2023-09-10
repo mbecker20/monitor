@@ -1,9 +1,9 @@
 use anyhow::Context;
-use mungos::{Collection, Mungos};
 use monitor_types::{
     Action, Build, Deployment, Group, PeripheryCommand, Procedure, Server, SystemStatsRecord,
     Update, User,
 };
+use mungos::{Collection, Mungos};
 
 pub async fn users_collection(mungos: &Mungos, db_name: &str) -> anyhow::Result<Collection<User>> {
     let coll = mungos.collection(db_name, "users");

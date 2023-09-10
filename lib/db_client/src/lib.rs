@@ -4,11 +4,11 @@ use collections::{
     groups_collection, procedures_collection, server_stats_collection, servers_collection,
     updates_collection, users_collection,
 };
-use mungos::{Collection, Mungos};
 use monitor_types::{
     Action, Build, Deployment, Group, MongoConfig, PeripheryCommand, PermissionLevel, Procedure,
     Server, SystemStatsRecord, Update, User,
 };
+use mungos::{Collection, Mungos};
 
 mod collections;
 

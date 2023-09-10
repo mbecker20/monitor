@@ -430,7 +430,7 @@ impl State {
                 entry.stopping_all_containers = false;
             })
             .await;
-        
+
         res
     }
 
