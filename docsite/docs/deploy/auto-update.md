@@ -15,6 +15,8 @@ Both **Stacks** and **Deployments** support two update modes:
 Auto-update requires a "rolling" image tag like `:latest`. For pinned tags in git-sourced stacks, consider [Renovate](https://github.com/renovatebot/renovate).
 :::
 
+**Auto Update** also supports a **Minimum Update Age**, the number of hours an image must have existed in the registry before it will be deployed. This gives the community a window to catch and pull compromised or broken releases before they reach you. It only delays **Auto Update**, not the update indicator / alert. `0` disables the check. [Docker recommends a 3 day (72 hour) cooldown](https://www.docker.com/blog/defending-your-software-supply-chain-what-every-engineering-team-should-do-now/) as a sensible default.
+
 ## Global Auto Update Procedure
 
 New installs include a **Global Auto Update** Procedure, scheduled daily. It loops through all resources with either mode enabled and checks registries for newer digests.

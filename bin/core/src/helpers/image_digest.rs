@@ -4,7 +4,10 @@ use komodo_client::entities::{
   ImageDigest, SwarmOrServer, komodo_timestamp,
 };
 use mogh_cache::CloneCache;
-use periphery_client::api::docker::GetLatestImageDigest;
+use periphery_client::api::docker::{
+  GetLatestImageCreated, GetLatestImageDigest,
+};
+use tracing::warn;
 
 use crate::helpers::swarm_or_server_request;
 
@@ -69,4 +72,45 @@ impl ImageDigestCache {
 
     Ok(digest)
   }
+}
+
+/// Checks the latest image age against `min_update_age_hours`.
+/// Fails open (`true`) if it's `0`, or the age can't be determined.
+pub async fn image_meets_min_age(
+  swarm_or_server: &SwarmOrServer,
+  image: &str,
+  account: Option<String>,
+  token: Option<String>,
+  min_update_age_hours: u32,
+) -> anyhow::Result<bool> {
+  if min_update_age_hours == 0 {
+    return Ok(true);
+  }
+
+  let res = swarm_or_server_request(
+    swarm_or_server,
+    GetLatestImageCreated {
+      name: image.to_string(),
+      account,
+      token,
+    },
+  )
+  .await?;
+
+  let Some(created) = res.created else {
+    return Ok(true);
+  };
+
+  let Ok(created) = chrono::DateTime::parse_from_rfc3339(&created)
+  else {
+    warn!(
+      "Failed to parse image creation time '{created}' for {image}"
+    );
+    return Ok(true);
+  };
+
+  let age_ms = komodo_timestamp() - created.timestamp_millis();
+  let min_age_ms = min_update_age_hours as i64 * 60 * 60 * 1_000;
+
+  Ok(age_ms >= min_age_ms)
 }
